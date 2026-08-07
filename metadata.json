@@ -1,0 +1,6 @@
+{
+  "name": "Slideshow com áudio",
+  "description": "Criador e player de slideshows interativos onde a navegação para o próximo slide é liberada após a execução completa do áudio.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
