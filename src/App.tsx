@@ -17,6 +17,10 @@ export default function App() {
       if (saved) {
         const parsed = JSON.parse(saved);
         if (parsed.slides && Array.isArray(parsed.slides)) {
+          if (parsed.slides.length > 0 && parsed.slides[0]) {
+            parsed.slides[0].imageUrl = 'https://www.image2url.com/r2/default/files/1786107541110-7147fb41-a0c9-418e-b1ce-8b35b8a7089a.png';
+            parsed.slides[0].audioUrl = 'https://www.image2url.com/r2/default/videos/1786109221182-a26d10ae-fed4-4489-a0f2-922bb88b1d09.mp4';
+          }
           parsed.slides = parsed.slides.map((slide: any, idx: number) => {
             const titleLower = (slide.title || '').toLowerCase().trim();
             if (

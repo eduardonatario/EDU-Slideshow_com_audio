@@ -22,6 +22,7 @@ interface ConfigPanelProps {
 
 // Royalty-free samples for quick creator selection
 const SAMPLE_IMAGES = [
+  { label: 'Padrão Slide 1', url: 'https://www.image2url.com/r2/default/files/1786107541110-7147fb41-a0c9-418e-b1ce-8b35b8a7089a.png' },
   { label: 'Praia / Mar', url: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80' },
   { label: 'Montanhas', url: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1200&q=80' },
   { label: 'Floresta', url: 'https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=1200&q=80' },
@@ -30,6 +31,7 @@ const SAMPLE_IMAGES = [
 ];
 
 const SAMPLE_AUDIOS = [
+  { label: 'Áudio Padrão Slide 1', url: 'https://www.image2url.com/r2/default/videos/1786109221182-a26d10ae-fed4-4489-a0f2-922bb88b1d09.mp4' },
   { label: 'Som Suave 1 (Freesound)', url: 'https://cdn.freesound.org/previews/682/682136_11861866-lq.mp3' },
   { label: 'Som Místico 2 (Freesound)', url: 'https://cdn.freesound.org/previews/612/612095_11861866-lq.mp3' },
   { label: 'Som Relaxante 3 (Freesound)', url: 'https://cdn.freesound.org/previews/560/560824_11861866-lq.mp3' },
@@ -73,8 +75,8 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onChangeConfig
     const newSlide: Slide = {
       id: `slide-${Date.now()}`,
       title: `SLIDE ${config.slides.length + 1}`,
-      imageUrl: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80',
-      audioUrl: 'https://cdn.freesound.org/previews/682/682136_11861866-lq.mp3',
+      imageUrl: 'https://www.image2url.com/r2/default/files/1786107541110-7147fb41-a0c9-418e-b1ce-8b35b8a7089a.png',
+      audioUrl: 'https://www.image2url.com/r2/default/videos/1786109221182-a26d10ae-fed4-4489-a0f2-922bb88b1d09.mp4',
       caption: 'Adicione uma legenda informativa para este slide.'
     };
     const updated = [...config.slides, newSlide];
