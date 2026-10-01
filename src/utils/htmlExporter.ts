@@ -197,7 +197,7 @@ export function generateStandaloneHtml(config: SlideshowConfig): string {
       background: #2563eb;
       width: 0%;
       border-radius: 9999px;
-      ${config.instantProgressBarFill ? 'transition: none;' : 'transition: width 0.15s ease-out;'}
+      ${config.instantProgressBarFill !== false ? 'transition: none;' : 'transition: width 0.15s ease-out;'}
     }
   </style>
 </head>
@@ -281,7 +281,7 @@ export function generateStandaloneHtml(config: SlideshowConfig): string {
         if (i < currentIndex) {
           fillEl.style.width = '100%';
         } else if (i === currentIndex) {
-          if (CONFIG.instantProgressBarFill) {
+          if (CONFIG.instantProgressBarFill !== false) {
             fillEl.style.width = (audioStarted || completedSlides.has(CONFIG.slides[i].id)) ? '100%' : '0%';
           } else {
             const isDone = completedSlides.has(CONFIG.slides[i].id);
@@ -323,7 +323,7 @@ export function generateStandaloneHtml(config: SlideshowConfig): string {
         audioStarted = true;
         updateProgressBar();
       }
-      if (CONFIG.instantProgressBarFill) return;
+      if (CONFIG.instantProgressBarFill !== false) return;
       const activeFill = document.getElementById('segment-fill-' + currentIndex);
       if (activeFill && audio.duration) {
         const pct = (audio.currentTime / audio.duration) * 100;

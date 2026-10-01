@@ -269,7 +269,7 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onChangeConfig
                 <label className="flex items-start gap-2.5 cursor-pointer text-xs text-slate-500 font-medium ml-6 pl-2 border-l-2 border-blue-200">
                   <input
                     type="checkbox"
-                    checked={config.instantProgressBarFill ?? false}
+                    checked={config.instantProgressBarFill ?? true}
                     onChange={(e) => handleUpdateInstantProgressBarFill(e.target.checked)}
                     className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 mt-0.5"
                   />

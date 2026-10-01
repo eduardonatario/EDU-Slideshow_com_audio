@@ -7,7 +7,7 @@ export const INITIAL_CONFIG: SlideshowConfig = {
   showCaptions: false,
   flashTransition: false,
   showProgressBar: true,
-  instantProgressBarFill: false,
+  instantProgressBarFill: true,
   theme: 'dark',
   slides: [
     {

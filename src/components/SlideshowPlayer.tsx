@@ -413,7 +413,7 @@ export const SlideshowPlayer: React.FC<SlideshowPlayerProps> = ({
             {config.slides.map((slide, idx) => {
               const isPast = idx < currentIndex;
               const isCurrent = idx === currentIndex;
-              const isInstant = !!config.instantProgressBarFill;
+              const isInstant = config.instantProgressBarFill ?? true;
 
               let isSolidBlue = false;
               let fillWidth = '0%';
