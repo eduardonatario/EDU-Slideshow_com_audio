@@ -15,6 +15,8 @@ export interface SlideshowConfig {
   autoAdvance: boolean;
   showCaptions: boolean;
   flashTransition?: boolean;
+  showProgressBar?: boolean;
+  instantProgressBarFill?: boolean;
   theme: 'dark' | 'light';
 }
 

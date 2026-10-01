@@ -45,7 +45,7 @@ export function generateStandaloneHtml(config: SlideshowConfig): string {
       position: relative;
       width: 100%;
       aspect-ratio: 16 / 9;
-      background-color: ${config.flashTransition !== false ? '#ffffff' : '#0f172a'};
+      background-color: #f1f5f9;
       border-radius: 16px;
       overflow: hidden;
       border: 1px solid #e2e8f0;
@@ -54,10 +54,12 @@ export function generateStandaloneHtml(config: SlideshowConfig): string {
       justify-content: center;
     }
     .slide-img {
+      position: absolute;
+      inset: 0;
       width: 100%;
       height: 100%;
       object-fit: cover;
-      transition: opacity 0.3s ease-in-out;
+      transition: none;
     }
     .nav-btn {
       position: absolute;
@@ -93,6 +95,28 @@ export function generateStandaloneHtml(config: SlideshowConfig): string {
     .nav-btn-right {
       right: 16px;
     }
+    .replay-btn {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      z-index: 30;
+      width: 40px;
+      height: 40px;
+      border-radius: 9999px;
+      background: rgba(255, 255, 255, 0.95);
+      color: #1e293b;
+      border: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+      transition: all 0.2s ease;
+    }
+    .replay-btn:hover {
+      background: #ffffff;
+      transform: scale(1.1);
+    }
     .caption-overlay {
       position: absolute;
       bottom: 0;
@@ -122,14 +146,14 @@ export function generateStandaloneHtml(config: SlideshowConfig): string {
     .play-overlay {
       position: absolute;
       inset: 0;
-      background: rgba(15, 23, 42, 0.6);
+      background: rgba(0, 0, 0, 0.4);
       backdrop-filter: blur(2px);
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       color: #ffffff;
-      z-index: 10;
+      z-index: 20;
     }
     .play-trigger-btn {
       width: 56px;
@@ -137,7 +161,7 @@ export function generateStandaloneHtml(config: SlideshowConfig): string {
       border-radius: 9999px;
       background: #ffffff;
       color: #000000;
-      border: none;
+      border: 1px solid #cbd5e1;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -145,9 +169,35 @@ export function generateStandaloneHtml(config: SlideshowConfig): string {
       box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
       transition: transform 0.2s ease;
       margin-top: 8px;
+      pointer-events: auto;
     }
     .play-trigger-btn:hover {
       transform: scale(1.1);
+    }
+    .progress-bar-container {
+      margin-top: 16px;
+      padding: 0 4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+    }
+    .progress-segment {
+      flex: 1;
+      height: 8px;
+      background: #e2e8f0;
+      border: 1px solid #cbd5e1;
+      border-radius: 9999px;
+      overflow: hidden;
+      position: relative;
+      cursor: pointer;
+    }
+    .progress-segment-fill {
+      height: 100%;
+      background: #2563eb;
+      width: 0%;
+      border-radius: 9999px;
+      ${config.instantProgressBarFill ? 'transition: none;' : 'transition: width 0.15s ease-out;'}
     }
   </style>
 </head>
@@ -156,7 +206,16 @@ export function generateStandaloneHtml(config: SlideshowConfig): string {
   <div class="slideshow-wrapper">
     <div class="media-container">
       <div id="flash-overlay" style="position: absolute; inset: 0; background-color: white; opacity: 0; pointer-events: none; z-index: 30;"></div>
-      <img id="slide-image" class="slide-img" src="" alt="Slide Image" />
+      ${config.slides.map((slide, i) => `
+        <img
+          id="slide-image-${i}"
+          class="slide-img"
+          src="${slide.imageUrl || ''}"
+          alt="${slide.title || 'Slide ' + (i + 1)}"
+          style="opacity: ${i === 0 ? '1' : '0'}; z-index: ${i === 0 ? '1' : '0'}; pointer-events: none;"
+          loading="eager"
+        />
+      `).join('')}
 
       <button id="btn-prev" class="nav-btn nav-btn-left" title="Slide Anterior" style="display: none;">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
@@ -164,6 +223,13 @@ export function generateStandaloneHtml(config: SlideshowConfig): string {
 
       <button id="btn-next" class="nav-btn nav-btn-right" title="Próximo Slide" style="display: none;">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+      </button>
+
+      <button id="btn-replay" class="replay-btn" title="Reiniciar Apresentação" style="display: none;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+          <path d="M3 3v5h5"/>
+        </svg>
       </button>
 
       <div class="caption-overlay" id="caption-box" style="display: none;">
@@ -177,6 +243,15 @@ export function generateStandaloneHtml(config: SlideshowConfig): string {
         </button>
       </div>
     </div>
+
+    ${config.showProgressBar !== false ? `
+    <div class="progress-bar-container" id="progress-container">
+      ${config.slides.map((_, i) => `
+        <div class="progress-segment" id="segment-${i}" data-index="${i}" title="Slide ${i + 1}">
+          <div class="progress-segment-fill" id="segment-fill-${i}"></div>
+        </div>
+      `).join('')}
+    </div>` : ''}
   </div>
 
   <audio id="audio-player" preload="auto"></audio>
@@ -185,12 +260,13 @@ export function generateStandaloneHtml(config: SlideshowConfig): string {
     const CONFIG = ${jsonConfig};
 
     let currentIndex = 0;
+    let audioStarted = false;
     const completedSlides = new Set();
 
     const audio = document.getElementById('audio-player');
-    const imgEl = document.getElementById('slide-image');
     const prevBtn = document.getElementById('btn-prev');
     const nextBtn = document.getElementById('btn-next');
+    const replayBtn = document.getElementById('btn-replay');
     const playOverlay = document.getElementById('play-overlay');
     const startAudioBtn = document.getElementById('btn-start-audio');
 
@@ -198,25 +274,97 @@ export function generateStandaloneHtml(config: SlideshowConfig): string {
     const titleEl = document.getElementById('slide-title');
     const textEl = document.getElementById('slide-text');
 
+    function updateProgressBar() {
+      for (let i = 0; i < CONFIG.slides.length; i++) {
+        const fillEl = document.getElementById('segment-fill-' + i);
+        if (!fillEl) continue;
+        if (i < currentIndex) {
+          fillEl.style.width = '100%';
+        } else if (i === currentIndex) {
+          if (CONFIG.instantProgressBarFill) {
+            fillEl.style.width = (audioStarted || completedSlides.has(CONFIG.slides[i].id)) ? '100%' : '0%';
+          } else {
+            const isDone = completedSlides.has(CONFIG.slides[i].id);
+            if (isDone) {
+              fillEl.style.width = '100%';
+            } else if (audio.duration) {
+              const pct = (audio.currentTime / audio.duration) * 100;
+              fillEl.style.width = pct + '%';
+            } else {
+              fillEl.style.width = '0%';
+            }
+          }
+        } else {
+          fillEl.style.width = '0%';
+        }
+      }
+    }
+
+    CONFIG.slides.forEach((_, i) => {
+      const seg = document.getElementById('segment-' + i);
+      if (seg) {
+        seg.addEventListener('click', (e) => {
+          if (i === currentIndex && audio.duration) {
+            const rect = seg.getBoundingClientRect();
+            const pos = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+            audio.currentTime = pos * audio.duration;
+          }
+        });
+      }
+    });
+
+    audio.addEventListener('play', () => {
+      audioStarted = true;
+      updateProgressBar();
+    });
+
+    audio.addEventListener('timeupdate', () => {
+      if (audio.currentTime > 0 && !audioStarted) {
+        audioStarted = true;
+        updateProgressBar();
+      }
+      if (CONFIG.instantProgressBarFill) return;
+      const activeFill = document.getElementById('segment-fill-' + currentIndex);
+      if (activeFill && audio.duration) {
+        const pct = (audio.currentTime / audio.duration) * 100;
+        activeFill.style.width = pct + '%';
+      }
+    });
+
     function loadSlide(index) {
       currentIndex = index;
       const slide = CONFIG.slides[currentIndex];
       if (!slide) return;
 
-      if (CONFIG.flashTransition !== false) {
+      if (Boolean(CONFIG.flashTransition)) {
         const flashOverlay = document.getElementById('flash-overlay');
         if (flashOverlay) {
           flashOverlay.style.transition = 'none';
           flashOverlay.style.opacity = '1';
           setTimeout(function() {
-            flashOverlay.style.transition = 'opacity 0.3s ease-out';
+            flashOverlay.style.transition = 'opacity 0.2s ease-out';
             flashOverlay.style.opacity = '0';
           }, 20);
         }
       }
 
-      imgEl.src = slide.imageUrl || '';
-      imgEl.style.opacity = '1';
+      for (let i = 0; i < CONFIG.slides.length; i++) {
+        const img = document.getElementById('slide-image-' + i);
+        if (img) {
+          if (i === currentIndex) {
+            img.style.opacity = '1';
+            img.style.zIndex = '10';
+          } else if (i < currentIndex) {
+            img.style.opacity = '1';
+            img.style.zIndex = '1';
+          } else {
+            img.style.opacity = '0';
+            img.style.zIndex = '0';
+          }
+        }
+      }
+
+      updateProgressBar();
 
       audio.src = slide.audioUrl || '';
       audio.load();
@@ -232,30 +380,56 @@ export function generateStandaloneHtml(config: SlideshowConfig): string {
       const isDone = completedSlides.has(slide.id);
       updateControlsUI(isDone);
 
-      playOverlay.style.display = 'none';
-
-      audio.play().then(() => {
+      if (audioStarted) {
         playOverlay.style.display = 'none';
-      }).catch(() => {
-        if (!isDone) {
-          playOverlay.style.display = 'flex';
+        const playPromise = audio.play();
+        if (playPromise !== undefined) {
+          playPromise.then(() => {
+            updateProgressBar();
+          }).catch((err) => {
+            console.warn('Playback error:', err);
+          });
         }
-      });
+      } else {
+        playOverlay.style.display = 'flex';
+      }
     }
 
     function updateControlsUI(isUnlocked) {
-      if (!CONFIG.autoAdvance && isUnlocked) {
+      const isLastSlide = currentIndex === CONFIG.slides.length - 1;
+      const isLastSlideCompleted = isLastSlide && completedSlides.has(CONFIG.slides[currentIndex].id);
+
+      if (!CONFIG.autoAdvance && isUnlocked && !isLastSlideCompleted) {
         prevBtn.style.display = currentIndex > 0 ? 'flex' : 'none';
-        nextBtn.style.display = currentIndex < CONFIG.slides.length - 1 ? 'flex' : 'none';
+        nextBtn.style.display = !isLastSlide ? 'flex' : 'none';
       } else {
         prevBtn.style.display = 'none';
         nextBtn.style.display = 'none';
       }
+
+      if (replayBtn) {
+        replayBtn.style.display = isLastSlideCompleted ? 'flex' : 'none';
+      }
+    }
+
+    if (replayBtn) {
+      replayBtn.addEventListener('click', () => {
+        audio.pause();
+        audio.currentTime = 0;
+        completedSlides.clear();
+        audioStarted = false;
+        replayBtn.style.display = 'none';
+        loadSlide(0);
+      });
     }
 
     startAudioBtn.addEventListener('click', () => {
+      audioStarted = true;
       audio.play().then(() => {
         playOverlay.style.display = 'none';
+        updateProgressBar();
+      }).catch((err) => {
+        console.warn('Audio play error:', err);
       });
     });
 
@@ -274,6 +448,7 @@ export function generateStandaloneHtml(config: SlideshowConfig): string {
     audio.addEventListener('ended', () => {
       const currentSlide = CONFIG.slides[currentIndex];
       completedSlides.add(currentSlide.id);
+      updateProgressBar();
       updateControlsUI(true);
 
       if (CONFIG.autoAdvance && currentIndex < CONFIG.slides.length - 1) {
@@ -286,6 +461,7 @@ export function generateStandaloneHtml(config: SlideshowConfig): string {
     audio.addEventListener('error', () => {
       // On error, auto unlock so user isn't stuck
       completedSlides.add(CONFIG.slides[currentIndex].id);
+      updateProgressBar();
       updateControlsUI(true);
       playOverlay.style.display = 'none';
     });

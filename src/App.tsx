@@ -14,7 +14,7 @@ export default function App() {
   // Load config from localStorage if available
   const [config, setConfig] = useState<SlideshowConfig>(() => {
     try {
-      const saved = localStorage.getItem('slideshow_config');
+      const saved = localStorage.getItem('slideshow_config_v3');
       if (saved) {
         const parsed = JSON.parse(saved);
         if (parsed.slides && Array.isArray(parsed.slides)) {
@@ -34,8 +34,14 @@ export default function App() {
             return slide;
           });
         }
-        if (parsed.flashTransition === undefined) {
-          parsed.flashTransition = true;
+        if (parsed.flashTransition === undefined || (parsed.flashTransition === true && parsed.slides?.[0]?.id === 'slide-1')) {
+          parsed.flashTransition = false;
+        }
+        if (parsed.showProgressBar === undefined) {
+          parsed.showProgressBar = true;
+        }
+        if (parsed.instantProgressBarFill === undefined) {
+          parsed.instantProgressBarFill = false;
         }
         if (parsed.title === 'Apresentação Interativa de Exemplo' || parsed.title === 'AudioSlide Pro' || parsed.title === 'Slide show com áudio') {
           parsed.title = 'Slideshow com áudio';
@@ -54,7 +60,7 @@ export default function App() {
   // Save to localStorage on change
   useEffect(() => {
     try {
-      localStorage.setItem('slideshow_config', JSON.stringify(config));
+      localStorage.setItem('slideshow_config_v3', JSON.stringify(config));
     } catch (e) {
       console.warn('Failed to save slideshow config:', e);
     }

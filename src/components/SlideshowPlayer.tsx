@@ -31,6 +31,7 @@ export const SlideshowPlayer: React.FC<SlideshowPlayerProps> = ({
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [completedSlideIds, setCompletedSlideIds] = useState<Set<string>>(new Set());
+  const [hasUserStarted, setHasUserStarted] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -51,6 +52,20 @@ export const SlideshowPlayer: React.FC<SlideshowPlayerProps> = ({
 
   const isCurrentSlideCompleted = currentSlide ? completedSlideIds.has(currentSlide.id) : false;
   const isLastSlide = currentIndex === config.slides.length - 1;
+  const isLastSlideCompleted = isLastSlide && isCurrentSlideCompleted;
+  const hasAudioStarted = hasUserStarted && (isPlaying || currentTime > 0 || isCurrentSlideCompleted);
+
+  // Preload all slide images eagerly
+  useEffect(() => {
+    if (config.slides) {
+      config.slides.forEach((slide) => {
+        if (slide.imageUrl) {
+          const img = new Image();
+          img.src = slide.imageUrl;
+        }
+      });
+    }
+  }, [config.slides]);
 
   // Load and play audio when slide changes
   useEffect(() => {
@@ -67,19 +82,24 @@ export const SlideshowPlayer: React.FC<SlideshowPlayerProps> = ({
     audio.load();
     audio.playbackRate = playbackRate;
 
-    const playPromise = audio.play();
-    if (playPromise !== undefined) {
-      playPromise
-        .then(() => {
-          setIsPlaying(true);
-        })
-        .catch((err) => {
-          // Autoplay blocked by browser or link invalid
-          setIsPlaying(false);
-          console.warn('Audio play restricted or link error:', err);
-        });
+    // Only auto-play if user has already started the presentation
+    if (hasUserStarted) {
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            setIsPlaying(true);
+          })
+          .catch((err) => {
+            // Autoplay blocked by browser or link invalid
+            setIsPlaying(false);
+            console.warn('Audio play restricted or link error:', err);
+          });
+      }
+    } else {
+      setIsPlaying(false);
     }
-  }, [currentIndex, currentSlide, config.slides]);
+  }, [currentIndex, currentSlide, config.slides, hasUserStarted]);
 
   // Audio Event Handlers
   const handleTimeUpdate = () => {
@@ -107,7 +127,28 @@ export const SlideshowPlayer: React.FC<SlideshowPlayerProps> = ({
     setIsPlaying(false);
   };
 
+  const handleStartAudio = () => {
+    setHasUserStarted(true);
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    audio
+      .play()
+      .then(() => {
+        setIsPlaying(true);
+        setHasAudioError(false);
+      })
+      .catch((err) => {
+        console.warn('Audio play error:', err);
+        setHasAudioError(true);
+      });
+  };
+
   const togglePlay = () => {
+    if (!hasUserStarted) {
+      handleStartAudio();
+      return;
+    }
     const audio = audioRef.current;
     if (!audio) return;
 
@@ -142,9 +183,21 @@ export const SlideshowPlayer: React.FC<SlideshowPlayerProps> = ({
   };
 
   const handlePrevSlide = () => {
-    if (currentIndex > 0) {
+    if (currentIndex > 0 && !isLastSlideCompleted) {
       setCurrentIndex((prev) => prev - 1);
     }
+  };
+
+  const handleReplaySlideshow = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
+    setIsPlaying(false);
+    setCurrentTime(0);
+    setCompletedSlideIds(new Set());
+    setHasUserStarted(false);
+    setCurrentIndex(0);
   };
 
   const handleForceUnlock = () => {
@@ -235,6 +288,8 @@ export const SlideshowPlayer: React.FC<SlideshowPlayerProps> = ({
     <div className={`w-full mx-auto ${sizeClasses[config.size]} transition-all duration-300 py-4`}>
       <audio
         ref={audioRef}
+        onPlay={() => setIsPlaying(true)}
+        onPause={() => setIsPlaying(false)}
         onTimeUpdate={handleTimeUpdate}
         onEnded={handleAudioEnded}
         onError={handleAudioError}
@@ -244,35 +299,42 @@ export const SlideshowPlayer: React.FC<SlideshowPlayerProps> = ({
       {/* Main White Slideshow Container */}
       <div className="bg-white border border-slate-200 rounded-3xl p-4 sm:p-6 shadow-xl relative overflow-hidden">
         {/* Media Container Viewport */}
-        <div className={`relative w-full aspect-video ${config.flashTransition !== false ? 'bg-slate-100' : 'bg-slate-950'} rounded-2xl overflow-hidden flex items-center justify-center border border-slate-200/80 shadow-inner group`}>
-          {config.flashTransition !== false && (
+        <div className="relative w-full aspect-video bg-slate-100 rounded-2xl overflow-hidden flex items-center justify-center border border-slate-200/80 shadow-inner group">
+          {Boolean(config.flashTransition) && (
             <motion.div
               key={`flash-${currentIndex}-${currentSlide.id}`}
               initial={{ opacity: 1 }}
               animate={{ opacity: 0 }}
-              transition={{ duration: 0.3, ease: 'easeOut' }}
+              transition={{ duration: 0.2, ease: 'easeOut' }}
               className="absolute inset-0 bg-white z-30 pointer-events-none"
             />
           )}
-          <AnimatePresence mode="wait">
-            <motion.img
-              key={currentSlide.id}
-              src={currentSlide.imageUrl}
-              alt={currentSlide.title || `Slide ${currentIndex + 1}`}
-              className="w-full h-full object-cover"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.25, ease: 'easeOut' }}
-              onError={(e) => {
-                (e.target as HTMLImageElement).src =
-                  'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80';
-              }}
-            />
-          </AnimatePresence>
+          {config.slides.map((slide, idx) => {
+            const isCurrent = idx === currentIndex;
+            const isPast = idx < currentIndex;
+            return (
+              <img
+                key={slide.id || idx}
+                src={slide.imageUrl}
+                alt={slide.title || `Slide ${idx + 1}`}
+                className={`absolute inset-0 w-full h-full object-cover select-none ${
+                  isCurrent
+                    ? 'opacity-100 z-10'
+                    : isPast
+                    ? 'opacity-100 z-0'
+                    : 'opacity-0 z-0 pointer-events-none'
+                }`}
+                loading="eager"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src =
+                    'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80';
+                }}
+              />
+            );
+          })}
 
-          {/* Left Arrow Button (Previous Slide) - Only appears when autoAdvance is false and after audio completes */}
-          {!config.autoAdvance && isCurrentSlideCompleted && currentIndex > 0 && (
+          {/* Left Arrow Button (Previous Slide) - Only appears when autoAdvance is false, audio completes, and NOT on finished last slide */}
+          {!config.autoAdvance && isCurrentSlideCompleted && currentIndex > 0 && !isLastSlideCompleted && (
             <button
               onClick={handlePrevSlide}
               className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-white/90 hover:bg-white text-slate-900 shadow-xl border border-slate-200 flex items-center justify-center transition-all active:scale-95 hover:scale-105"
@@ -292,6 +354,18 @@ export const SlideshowPlayer: React.FC<SlideshowPlayerProps> = ({
               aria-label="Próximo Slide"
             >
               <ChevronRight className="w-6 h-6 stroke-[2.5]" />
+            </button>
+          )}
+
+          {/* Replay / Review Icon in Top-Right Corner - Appears when last slide finishes its audio */}
+          {isLastSlideCompleted && (
+            <button
+              onClick={handleReplaySlideshow}
+              className="absolute top-4 right-4 z-30 w-10 h-10 rounded-full bg-white/95 hover:bg-white text-slate-800 shadow-xl border border-slate-200/80 flex items-center justify-center transition-all hover:scale-110 active:scale-95 cursor-pointer group"
+              title="Reiniciar Apresentação"
+              aria-label="Reiniciar Apresentação"
+            >
+              <RotateCcw className="w-5 h-5 text-slate-700 group-hover:rotate-[-45deg] transition-transform" />
             </button>
           )}
 
@@ -318,20 +392,76 @@ export const SlideshowPlayer: React.FC<SlideshowPlayerProps> = ({
             </motion.div>
           )}
 
-          {/* Central Play Button Overlay (No text, only center play button) */}
-          {(hasAudioError || (!isPlaying && !isCurrentSlideCompleted)) && (
-            <div className="absolute inset-0 bg-black/30 backdrop-blur-[2px] flex items-center justify-center z-10 transition-all">
+          {/* Central Play Button Overlay with Dimmed Black Effect (Shown ONLY initially before clicking to start slideshow) */}
+          {!hasUserStarted && (
+            <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] flex items-center justify-center z-20 pointer-events-auto transition-opacity duration-300">
               <button
-                onClick={togglePlay}
-                className="w-16 h-16 rounded-full bg-white text-slate-900 flex items-center justify-center shadow-2xl hover:scale-110 active:scale-95 transition-all"
-                title="Iniciar Áudio"
-                aria-label="Iniciar Áudio"
+                onClick={handleStartAudio}
+                className="w-16 h-16 rounded-full bg-white text-slate-900 flex items-center justify-center shadow-2xl hover:scale-110 active:scale-95 transition-transform cursor-pointer border border-slate-200/80"
+                title="Começar Slideshow"
+                aria-label="Começar Slideshow"
               >
                 <Play className="w-7 h-7 fill-current ml-1" />
               </button>
             </div>
           )}
         </div>
+
+        {/* Segmented Status Bar Below Slideshow */}
+        {config.showProgressBar !== false && (
+          <div className="mt-4 pt-1 px-1 flex items-center gap-2 w-full">
+            {config.slides.map((slide, idx) => {
+              const isPast = idx < currentIndex;
+              const isCurrent = idx === currentIndex;
+              const isInstant = !!config.instantProgressBarFill;
+
+              let isSolidBlue = false;
+              let fillWidth = '0%';
+
+              if (isInstant) {
+                if (isPast) {
+                  isSolidBlue = true;
+                  fillWidth = '100%';
+                } else if (isCurrent) {
+                  isSolidBlue = hasAudioStarted;
+                  fillWidth = hasAudioStarted ? '100%' : '0%';
+                }
+              } else {
+                if (isPast) {
+                  fillWidth = '100%';
+                } else if (isCurrent) {
+                  fillWidth = isCurrentSlideCompleted ? '100%' : `${progressPercent}%`;
+                }
+              }
+
+              return (
+                <div
+                  key={slide.id || idx}
+                  className={`flex-1 h-2 rounded-full overflow-hidden relative border border-slate-200/80 cursor-pointer ${
+                    isInstant && isSolidBlue ? 'bg-blue-600' : 'bg-slate-200'
+                  }`}
+                  title={`Slide ${idx + 1}`}
+                  onClick={(e) => {
+                    if (!isInstant && isCurrent && audioRef.current && duration) {
+                      const rect = e.currentTarget.getBoundingClientRect();
+                      const clickPos = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+                      const newTime = clickPos * duration;
+                      audioRef.current.currentTime = newTime;
+                      setCurrentTime(newTime);
+                    }
+                  }}
+                >
+                  {!isInstant && (
+                    <div
+                      className="h-full bg-blue-600 rounded-full transition-all duration-150 ease-out"
+                      style={{ width: fillWidth }}
+                    />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );

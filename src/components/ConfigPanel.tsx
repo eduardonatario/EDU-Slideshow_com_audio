@@ -69,6 +69,14 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onChangeConfig
     onChangeConfig({ ...config, flashTransition });
   };
 
+  const handleUpdateShowProgressBar = (showProgressBar: boolean) => {
+    onChangeConfig({ ...config, showProgressBar });
+  };
+
+  const handleUpdateInstantProgressBarFill = (instantProgressBarFill: boolean) => {
+    onChangeConfig({ ...config, instantProgressBarFill });
+  };
+
   const handleAddSlide = () => {
     const newSlide: Slide = {
       id: `slide-${Date.now()}`,
@@ -240,12 +248,34 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onChangeConfig
               <label className="flex items-start gap-2.5 cursor-pointer text-xs text-slate-600 font-medium">
                 <input
                   type="checkbox"
-                  checked={config.flashTransition ?? true}
+                  checked={config.flashTransition ?? false}
                   onChange={(e) => handleUpdateFlashTransition(e.target.checked)}
                   className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 mt-0.5"
                 />
                 <span>Efeito de piscar branco ao passar para o próximo slide</span>
               </label>
+
+              <label className="flex items-start gap-2.5 cursor-pointer text-xs text-slate-600 font-medium">
+                <input
+                  type="checkbox"
+                  checked={config.showProgressBar ?? true}
+                  onChange={(e) => handleUpdateShowProgressBar(e.target.checked)}
+                  className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 mt-0.5"
+                />
+                <span>Exibir barra de progresso abaixo do slideshow</span>
+              </label>
+
+              {(config.showProgressBar ?? true) && (
+                <label className="flex items-start gap-2.5 cursor-pointer text-xs text-slate-500 font-medium ml-6 pl-2 border-l-2 border-blue-200">
+                  <input
+                    type="checkbox"
+                    checked={config.instantProgressBarFill ?? false}
+                    onChange={(e) => handleUpdateInstantProgressBarFill(e.target.checked)}
+                    className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 mt-0.5"
+                  />
+                  <span>Acender a barra azul de uma vez ao entrar no slide (sem seguir o áudio)</span>
+                </label>
+              )}
             </div>
           </div>
 
