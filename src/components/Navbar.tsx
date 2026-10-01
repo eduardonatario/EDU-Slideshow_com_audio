@@ -37,11 +37,11 @@ export const Navbar: React.FC<NavbarProps> = ({
           <div>
             <div className="flex items-center gap-2">
               <h1 className="font-bold text-lg tracking-tight text-slate-900">
-                Slideshow com áudio
+                Audio Slideshow
               </h1>
             </div>
             <p className="text-xs text-slate-500 font-medium">
-              Criador de slideshow com áudio
+              Criador de Audio Slideshow
             </p>
           </div>
         </div>

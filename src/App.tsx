@@ -46,8 +46,13 @@ export default function App() {
         if (parsed.instantProgressBarFill === undefined || (parsed.instantProgressBarFill === false && parsed.slides?.[0]?.id === 'slide-1')) {
           parsed.instantProgressBarFill = true;
         }
-        if (parsed.title === 'Apresentação Interativa de Exemplo' || parsed.title === 'AudioSlide Pro' || parsed.title === 'Slide show com áudio') {
-          parsed.title = 'Slideshow com áudio';
+        if (
+          parsed.title === 'Apresentação Interativa de Exemplo' ||
+          parsed.title === 'AudioSlide Pro' ||
+          parsed.title === 'Slide show com áudio' ||
+          parsed.title === 'Slideshow com áudio'
+        ) {
+          parsed.title = 'Audio Slideshow';
         }
         return parsed;
       }

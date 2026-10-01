@@ -1,7 +1,7 @@
 import { SlideshowConfig } from '../types';
 
 export const INITIAL_CONFIG: SlideshowConfig = {
-  title: 'Slideshow com áudio',
+  title: 'Audio Slideshow',
   size: 'medium',
   autoAdvance: false,
   showCaptions: false,
