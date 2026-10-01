@@ -4,8 +4,7 @@ import { INITIAL_CONFIG } from './data/presetSlides';
 import { Navbar } from './components/Navbar';
 import { SlideshowPlayer } from './components/SlideshowPlayer';
 import { ConfigPanel } from './components/ConfigPanel';
-import { EmbedModal } from './components/EmbedModal';
-import { downloadHtmlFile } from './utils/htmlExporter';
+import { downloadHtmlFile, generateStandaloneHtml } from './utils/htmlExporter';
 
 export default function App() {
   // Check if URL has ?embed=true
@@ -55,7 +54,6 @@ export default function App() {
   });
 
   const [mode, setMode] = useState<'player' | 'editor'>('player');
-  const [isEmbedModalOpen, setIsEmbedModalOpen] = useState(false);
 
   // Save to localStorage on change
   useEffect(() => {
@@ -72,6 +70,20 @@ export default function App() {
 
   const handleDownloadHtml = () => {
     downloadHtmlFile(config, `${config.title || 'slideshow'}.html`);
+  };
+
+  const handleCopyHtml = async () => {
+    const html = generateStandaloneHtml(config);
+    try {
+      await navigator.clipboard.writeText(html);
+    } catch {
+      const textarea = document.createElement('textarea');
+      textarea.value = html;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+    }
   };
 
   const appUrl = window.location.origin + window.location.pathname;
@@ -94,7 +106,7 @@ export default function App() {
         size={config.size}
         setSize={handleUpdateSize}
         onDownloadHtml={handleDownloadHtml}
-        onOpenEmbedModal={() => setIsEmbedModalOpen(true)}
+        onCopyHtml={handleCopyHtml}
       />
 
       {/* Main Body View */}
@@ -105,16 +117,6 @@ export default function App() {
               config={config}
               onEditConfig={() => setMode('editor')}
             />
-
-            {/* Quick Hints Footer Banner */}
-            <div className="max-w-xl mx-auto p-4 bg-white border border-slate-200 rounded-2xl shadow-xs text-center text-xs text-slate-500 space-y-1">
-              <p className="font-semibold text-slate-800">
-                🔒 Trava Ativa: O botão "Próximo Slide" só é ativado após o término do áudio.
-              </p>
-              <p className="text-slate-500">
-                Alterne para a <span className="text-black font-semibold">Configuração</span> no topo para gerenciar imagens, áudios e tamanhos.
-              </p>
-            </div>
           </div>
         ) : (
           <ConfigPanel
@@ -124,19 +126,6 @@ export default function App() {
           />
         )}
       </main>
-
-      {/* Footer */}
-      <footer className="py-4 border-t border-slate-200/80 bg-white text-center text-xs text-slate-400 font-medium">
-        Criador de slideshow com áudio
-      </footer>
-
-      {/* Embed & Download Popup Modal */}
-      <EmbedModal
-        isOpen={isEmbedModalOpen}
-        onClose={() => setIsEmbedModalOpen(false)}
-        config={config}
-        appUrl={appUrl}
-      />
     </div>
   );
 }

@@ -8,23 +8,16 @@ import {
   Upload,
   Image as ImageIcon,
   Music,
-  Settings2,
-  Copy,
-  Check,
-  Download,
-  Code,
   Layout,
   Volume2,
   Sparkles,
-  Layers,
-  Info
+  Layers
 } from 'lucide-react';
-import { downloadHtmlFile, generateEmbedCode } from '../utils/htmlExporter';
 
 interface ConfigPanelProps {
   config: SlideshowConfig;
   onChangeConfig: (newConfig: SlideshowConfig) => void;
-  appUrl: string;
+  appUrl?: string;
 }
 
 // Royalty-free samples for quick creator selection
@@ -45,7 +38,6 @@ const SAMPLE_AUDIOS = [
 
 export const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onChangeConfig, appUrl }) => {
   const [selectedSlideId, setSelectedSlideId] = useState<string>(config.slides[0]?.id || '');
-  const [copiedEmbed, setCopiedEmbed] = useState(false);
 
   const selectedSlide = config.slides.find((s) => s.id === selectedSlideId) || config.slides[0];
 
@@ -132,45 +124,8 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onChangeConfig
     reader.readAsDataURL(file);
   };
 
-  const embedCode = generateEmbedCode(config, appUrl);
-
-  const handleCopyEmbed = () => {
-    navigator.clipboard.writeText(embedCode);
-    setCopiedEmbed(true);
-    setTimeout(() => setCopiedEmbed(false), 2000);
-  };
-
   return (
     <div className="max-w-7xl mx-auto space-y-8 text-slate-800">
-      {/* Configuration Hero Bento Card */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-8 bg-white border border-slate-200 rounded-3xl shadow-xs">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="bg-slate-100 text-[10px] uppercase font-bold px-2.5 py-0.5 rounded-full text-slate-500 tracking-wider border border-slate-200">
-              Painel de Edição
-            </span>
-          </div>
-          <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-            <Settings2 className="w-5 h-5 text-slate-700" />
-            Configuração da Apresentação
-          </h2>
-          <p className="text-xs text-slate-500 mt-1">
-            Defina imagens, áudios, opções de avanço e exportação autônoma.
-          </p>
-        </div>
-
-        {/* Global Action Buttons */}
-        <div className="flex flex-wrap items-center gap-3">
-          <button
-            onClick={() => downloadHtmlFile(config, `${config.title || 'slideshow'}.html`)}
-            className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-full text-xs shadow-sm transition-all"
-          >
-            <Download className="w-4 h-4 text-white" />
-            Baixar Arquivo HTML
-          </button>
-        </div>
-      </div>
-
       {/* Main Grid Layout: General Settings + Slide Manager + Slide Detail */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Left Column (4 cols): General Settings + Slide List */}
@@ -534,53 +489,6 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onChangeConfig
               Nenhum slide selecionado.
             </div>
           )}
-
-          {/* Embed Preparation Box */}
-          <div className="p-8 bg-white border border-slate-200 rounded-3xl shadow-xs space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div>
-                <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                  <Code className="w-4 h-4 text-slate-700" />
-                  Código de Incorporação (Embed HTML)
-                </h3>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Copie o código de iframe para incorporar em WordPress, LMS, Notion ou páginas web.
-                </p>
-              </div>
-            </div>
-
-            <div className="relative">
-              <textarea
-                readOnly
-                value={embedCode}
-                rows={3}
-                className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-2xl font-mono text-xs text-slate-800 focus:outline-none"
-              />
-              <button
-                onClick={handleCopyEmbed}
-                className="absolute top-3 right-3 flex items-center gap-1.5 px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-full text-xs font-semibold transition-all shadow-sm"
-              >
-                {copiedEmbed ? (
-                  <>
-                    <Check className="w-3.5 h-3.5 text-emerald-400" />
-                    Copiado!
-                  </>
-                ) : (
-                  <>
-                    <Copy className="w-3.5 h-3.5" />
-                    Copiar Código
-                  </>
-                )}
-              </button>
-            </div>
-
-            <div className="bg-slate-100 border border-slate-200 rounded-2xl p-4 flex items-start gap-3 text-xs text-slate-700">
-              <Info className="w-4 h-4 text-slate-900 flex-shrink-0 mt-0.5" />
-              <div>
-                <strong>Instruções de Embed:</strong> O iframe carrega a aplicação na versão responsiva sem cabeçalhos de administração. O leitor só conseguirá avançar de slide após a execução completa do arquivo de áudio.
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>

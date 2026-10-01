@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { SlideSize } from '../types';
-import { Monitor, Settings, Play, Download, Code, Sparkles, Volume2 } from 'lucide-react';
+import { Monitor, Settings, Play, Download, Sparkles, Volume2, Copy, Check } from 'lucide-react';
 
 interface NavbarProps {
   mode: 'player' | 'editor';
@@ -8,7 +8,7 @@ interface NavbarProps {
   size: SlideSize;
   setSize: (size: SlideSize) => void;
   onDownloadHtml: () => void;
-  onOpenEmbedModal: () => void;
+  onCopyHtml: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -17,8 +17,15 @@ export const Navbar: React.FC<NavbarProps> = ({
   size,
   setSize,
   onDownloadHtml,
-  onOpenEmbedModal
+  onCopyHtml
 }) => {
+  const [copiedHtml, setCopiedHtml] = useState(false);
+
+  const handleCopyHtml = () => {
+    onCopyHtml();
+    setCopiedHtml(true);
+    setTimeout(() => setCopiedHtml(false), 2000);
+  };
   return (
     <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-200 text-slate-900 px-4 sm:px-8 py-3.5 shadow-xs">
       <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
@@ -85,14 +92,23 @@ export const Navbar: React.FC<NavbarProps> = ({
             ))}
           </div>
 
-          {/* Download & Embed Actions */}
+          {/* Copy HTML & Download Actions */}
           <button
-            onClick={onOpenEmbedModal}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-semibold bg-white text-slate-700 hover:bg-slate-50 border border-slate-200 shadow-2xs transition-colors"
-            title="Preparar para Embed em sites ou LMS"
+            onClick={handleCopyHtml}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-semibold bg-white text-slate-700 hover:bg-slate-50 border border-slate-200 shadow-2xs transition-colors cursor-pointer"
+            title="Copiar código HTML do slideshow para a área de transferência"
           >
-            <Code className="w-3.5 h-3.5 text-slate-700" />
-            <span className="hidden sm:inline">Embed</span>
+            {copiedHtml ? (
+              <>
+                <Check className="w-3.5 h-3.5 text-emerald-600" />
+                <span className="text-emerald-700 font-bold">Copiado!</span>
+              </>
+            ) : (
+              <>
+                <Copy className="w-3.5 h-3.5 text-slate-700" />
+                <span>Copiar html</span>
+              </>
+            )}
           </button>
 
           <button
