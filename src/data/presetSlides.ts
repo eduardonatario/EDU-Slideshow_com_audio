@@ -8,6 +8,8 @@ export const INITIAL_CONFIG: SlideshowConfig = {
   flashTransition: false,
   showProgressBar: true,
   instantProgressBarFill: true,
+  advanceOnClickImage: false,
+  disableInitialDarkOverlay: false,
   theme: 'dark',
   slides: [
     {

@@ -20,22 +20,21 @@ interface ConfigPanelProps {
   appUrl?: string;
 }
 
-// Royalty-free samples for quick creator selection
+// Samples for quick creator selection
 const SAMPLE_IMAGES = [
-  { label: 'Padrão Slide 1', url: 'https://www.image2url.com/r2/default/files/1786107541110-7147fb41-a0c9-418e-b1ce-8b35b8a7089a.png' },
-  { label: 'Praia / Mar', url: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80' },
-  { label: 'Montanhas', url: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1200&q=80' },
-  { label: 'Floresta', url: 'https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=1200&q=80' },
-  { label: 'Pôr do Sol', url: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1200&q=80' },
-  { label: 'Tecnologia / Minimalista', url: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=80' }
+  { label: 'Imagem Slide 1', url: 'https://www.image2url.com/r2/default/files/1786107541110-7147fb41-a0c9-418e-b1ce-8b35b8a7089a.png' },
+  { label: 'Imagem Slide 2', url: 'https://www.image2url.com/r2/default/files/1786107637381-4a4d7507-e1b1-43d2-81ca-a658c03c44e7.png' },
+  { label: 'Imagem Slide 3', url: 'https://www.image2url.com/r2/default/files/1786107722306-dd051aa1-a869-4dbe-b739-381b420e6c7f.png' },
+  { label: 'Imagem Slide 4', url: 'https://www.image2url.com/r2/default/files/1786107816100-36c492a1-ca13-41a0-8a2b-86926cc1793b.png' },
+  { label: 'Imagem Slide 5', url: 'https://www.image2url.com/r2/default/files/1786107898812-2c2ea158-182e-44c2-aa05-68c9687c9bc9.png' }
 ];
 
 const SAMPLE_AUDIOS = [
-  { label: 'Áudio Padrão Slide 1', url: 'https://www.image2url.com/r2/default/videos/1786109221182-a26d10ae-fed4-4489-a0f2-922bb88b1d09.mp4' },
-  { label: 'Som Suave 1 (Freesound)', url: 'https://cdn.freesound.org/previews/682/682136_11861866-lq.mp3' },
-  { label: 'Som Místico 2 (Freesound)', url: 'https://cdn.freesound.org/previews/612/612095_11861866-lq.mp3' },
-  { label: 'Som Relaxante 3 (Freesound)', url: 'https://cdn.freesound.org/previews/560/560824_11861866-lq.mp3' },
-  { label: 'Som Piano 4 (Freesound)', url: 'https://cdn.freesound.org/previews/612/612092_11861866-lq.mp3' }
+  { label: 'Áudio Slide 1', url: 'https://www.image2url.com/r2/default/videos/1786109221182-a26d10ae-fed4-4489-a0f2-922bb88b1d09.mp4' },
+  { label: 'Áudio Slide 2', url: 'https://www.image2url.com/r2/default/videos/1786109394770-93e5b433-ee9b-4eeb-a794-e10b3cd6eb25.mp4' },
+  { label: 'Áudio Slide 3', url: 'https://www.image2url.com/r2/default/videos/1786109436532-63d7442c-4e76-41c8-ac1f-b67821d8d4e7.mp4' },
+  { label: 'Áudio Slide 4', url: 'https://www.image2url.com/r2/default/videos/1786109476505-e4d4dffc-0f09-4ffe-9b6d-708f14063801.mp4' },
+  { label: 'Áudio Slide 5', url: 'https://www.image2url.com/r2/default/videos/1786109436532-63d7442c-4e76-41c8-ac1f-b67821d8d4e7.mp4' }
 ];
 
 export const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onChangeConfig, appUrl }) => {
@@ -69,6 +68,14 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onChangeConfig
 
   const handleUpdateInstantProgressBarFill = (instantProgressBarFill: boolean) => {
     onChangeConfig({ ...config, instantProgressBarFill });
+  };
+
+  const handleUpdateAdvanceOnClickImage = (advanceOnClickImage: boolean) => {
+    onChangeConfig({ ...config, advanceOnClickImage });
+  };
+
+  const handleUpdateDisableInitialDarkOverlay = (disableInitialDarkOverlay: boolean) => {
+    onChangeConfig({ ...config, disableInitialDarkOverlay });
   };
 
   const handleAddSlide = () => {
@@ -233,6 +240,36 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onChangeConfig
                   <span>Acender a barra azul de uma vez ao entrar no slide (sem seguir o áudio)</span>
                 </label>
               )}
+
+              <label className="flex items-start gap-2.5 cursor-pointer text-xs text-slate-600 font-medium pt-1 border-t border-slate-100">
+                <input
+                  type="checkbox"
+                  checked={config.advanceOnClickImage ?? false}
+                  onChange={(e) => handleUpdateAdvanceOnClickImage(e.target.checked)}
+                  className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 mt-0.5"
+                />
+                <div>
+                  <span className="font-semibold text-slate-700">Não exigir término do áudio</span>
+                  <p className="text-[11px] text-slate-400 font-normal mt-0.5">
+                    O botão de próximo já aparece assim que o slideshow é iniciado, sem precisar esperar o término do áudio.
+                  </p>
+                </div>
+              </label>
+
+              <label className="flex items-start gap-2.5 cursor-pointer text-xs text-slate-600 font-medium">
+                <input
+                  type="checkbox"
+                  checked={config.disableInitialDarkOverlay ?? false}
+                  onChange={(e) => handleUpdateDisableInitialDarkOverlay(e.target.checked)}
+                  className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 mt-0.5"
+                />
+                <div>
+                  <span className="font-semibold text-slate-700">Não exibir tela escurecida no primeiro frame do slideshow</span>
+                  <p className="text-[11px] text-slate-400 font-normal mt-0.5">
+                    Mantém a imagem inicial 100% visível, nítida e clara antes do primeiro clique de início (sem camada escura ou desfoque).
+                  </p>
+                </div>
+              </label>
             </div>
           </div>
 

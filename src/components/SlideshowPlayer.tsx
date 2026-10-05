@@ -51,9 +51,12 @@ export const SlideshowPlayer: React.FC<SlideshowPlayerProps> = ({
   };
 
   const isCurrentSlideCompleted = currentSlide ? completedSlideIds.has(currentSlide.id) : false;
+  const isAudioBypassed = Boolean(config.advanceOnClickImage) && hasUserStarted;
+  const canAdvance = isCurrentSlideCompleted || isAudioBypassed;
   const isLastSlide = currentIndex === config.slides.length - 1;
   const isLastSlideCompleted = isLastSlide && isCurrentSlideCompleted;
-  const hasAudioStarted = hasUserStarted && (isPlaying || currentTime > 0 || isCurrentSlideCompleted);
+  const showReplayButton = isLastSlide && (isCurrentSlideCompleted || isAudioBypassed);
+  const hasAudioStarted = hasUserStarted && (isPlaying || currentTime > 0 || isCurrentSlideCompleted || isAudioBypassed);
 
   // Preload all slide images eagerly
   useEffect(() => {
@@ -177,7 +180,7 @@ export const SlideshowPlayer: React.FC<SlideshowPlayerProps> = ({
   };
 
   const handleNextSlide = () => {
-    if (isCurrentSlideCompleted && !isLastSlide) {
+    if (canAdvance && !isLastSlide) {
       setCurrentIndex((prev) => prev + 1);
     }
   };
@@ -198,6 +201,15 @@ export const SlideshowPlayer: React.FC<SlideshowPlayerProps> = ({
     setCompletedSlideIds(new Set());
     setHasUserStarted(false);
     setCurrentIndex(0);
+  };
+
+  const handleMediaContainerClick = (e: React.MouseEvent) => {
+    if ((e.target as HTMLElement).closest('button')) return;
+
+    if (!hasUserStarted) {
+      handleStartAudio();
+      return;
+    }
   };
 
   const handleForceUnlock = () => {
@@ -251,7 +263,7 @@ export const SlideshowPlayer: React.FC<SlideshowPlayerProps> = ({
   // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowRight' && isCurrentSlideCompleted && !isLastSlide) {
+      if (e.key === 'ArrowRight' && canAdvance && !isLastSlide) {
         handleNextSlide();
       } else if (e.key === 'ArrowLeft' && currentIndex > 0) {
         handlePrevSlide();
@@ -262,7 +274,7 @@ export const SlideshowPlayer: React.FC<SlideshowPlayerProps> = ({
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentIndex, isCurrentSlideCompleted, isLastSlide, isPlaying]);
+  }, [currentIndex, canAdvance, isLastSlide, isPlaying]);
 
   if (!config.slides || config.slides.length === 0) {
     return (
@@ -299,7 +311,10 @@ export const SlideshowPlayer: React.FC<SlideshowPlayerProps> = ({
       {/* Main White Slideshow Container */}
       <div className="bg-white border border-slate-200 rounded-3xl p-4 sm:p-6 shadow-xl relative overflow-hidden">
         {/* Media Container Viewport */}
-        <div className="relative w-full aspect-video bg-slate-100 rounded-2xl overflow-hidden flex items-center justify-center border border-slate-200/80 shadow-inner group">
+        <div
+          onClick={handleMediaContainerClick}
+          className="relative w-full aspect-video bg-slate-100 rounded-2xl overflow-hidden flex items-center justify-center border border-slate-200/80 shadow-inner group"
+        >
           {Boolean(config.flashTransition) && (
             <motion.div
               key={`flash-${currentIndex}-${currentSlide.id}`}
@@ -333,8 +348,8 @@ export const SlideshowPlayer: React.FC<SlideshowPlayerProps> = ({
             );
           })}
 
-          {/* Left Arrow Button (Previous Slide) - Only appears when autoAdvance is false, audio completes, and NOT on finished last slide */}
-          {!config.autoAdvance && isCurrentSlideCompleted && currentIndex > 0 && !isLastSlideCompleted && (
+          {/* Left Arrow Button (Previous Slide) */}
+          {!config.autoAdvance && (canAdvance || Boolean(config.advanceOnClickImage) || isCurrentSlideCompleted) && currentIndex > 0 && !isLastSlideCompleted && (
             <button
               onClick={handlePrevSlide}
               className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-white/90 hover:bg-white text-slate-900 shadow-xl border border-slate-200 flex items-center justify-center transition-all active:scale-95 hover:scale-105"
@@ -345,8 +360,8 @@ export const SlideshowPlayer: React.FC<SlideshowPlayerProps> = ({
             </button>
           )}
 
-          {/* Right Arrow Button (Next Slide) - Only appears when autoAdvance is false and after audio completes */}
-          {!config.autoAdvance && isCurrentSlideCompleted && !isLastSlide && (
+          {/* Right Arrow Button (Next Slide) */}
+          {!config.autoAdvance && canAdvance && !isLastSlide && (
             <button
               onClick={handleNextSlide}
               className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-white hover:bg-slate-100 text-slate-900 shadow-xl border border-slate-200 flex items-center justify-center transition-all active:scale-95 hover:scale-105"
@@ -357,8 +372,8 @@ export const SlideshowPlayer: React.FC<SlideshowPlayerProps> = ({
             </button>
           )}
 
-          {/* Replay / Review Icon in Top-Right Corner - Appears when last slide finishes its audio */}
-          {isLastSlideCompleted && (
+          {/* Replay / Review Icon in Top-Right Corner */}
+          {showReplayButton && (
             <button
               onClick={handleReplaySlideshow}
               className="absolute top-4 right-4 z-30 w-10 h-10 rounded-full bg-white/95 hover:bg-white text-slate-800 shadow-xl border border-slate-200/80 flex items-center justify-center transition-all hover:scale-110 active:scale-95 cursor-pointer group"
@@ -392,9 +407,15 @@ export const SlideshowPlayer: React.FC<SlideshowPlayerProps> = ({
             </motion.div>
           )}
 
-          {/* Central Play Button Overlay with Dimmed Black Effect (Shown ONLY initially before clicking to start slideshow) */}
+          {/* Central Play Button Overlay (With or without Dimmed Black Effect) */}
           {!hasUserStarted && (
-            <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] flex items-center justify-center z-20 pointer-events-auto transition-opacity duration-300">
+            <div
+              className={`absolute inset-0 flex items-center justify-center z-20 pointer-events-auto transition-opacity duration-300 ${
+                config.disableInitialDarkOverlay
+                  ? 'bg-transparent'
+                  : 'bg-black/40 backdrop-blur-[2px]'
+              }`}
+            >
               <button
                 onClick={handleStartAudio}
                 className="w-16 h-16 rounded-full bg-white text-slate-900 flex items-center justify-center shadow-2xl hover:scale-110 active:scale-95 transition-transform cursor-pointer border border-slate-200/80"

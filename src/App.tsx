@@ -6,6 +6,14 @@ import { SlideshowPlayer } from './components/SlideshowPlayer';
 import { ConfigPanel } from './components/ConfigPanel';
 import { downloadHtmlFile, generateStandaloneHtml } from './utils/htmlExporter';
 
+const DEFAULT_AUDIO_URLS = [
+  'https://www.image2url.com/r2/default/videos/1786109221182-a26d10ae-fed4-4489-a0f2-922bb88b1d09.mp4',
+  'https://www.image2url.com/r2/default/videos/1786109394770-93e5b433-ee9b-4eeb-a794-e10b3cd6eb25.mp4',
+  'https://www.image2url.com/r2/default/videos/1786109436532-63d7442c-4e76-41c8-ac1f-b67821d8d4e7.mp4',
+  'https://www.image2url.com/r2/default/videos/1786109476505-e4d4dffc-0f09-4ffe-9b6d-708f14063801.mp4',
+  'https://www.image2url.com/r2/default/videos/1786109436532-63d7442c-4e76-41c8-ac1f-b67821d8d4e7.mp4'
+];
+
 export default function App() {
   // Check if URL has ?embed=true
   const isEmbedMode = new URLSearchParams(window.location.search).get('embed') === 'true';
@@ -17,11 +25,10 @@ export default function App() {
       if (saved) {
         const parsed = JSON.parse(saved);
         if (parsed.slides && Array.isArray(parsed.slides)) {
-          if (parsed.slides.length > 0 && parsed.slides[0]) {
-            parsed.slides[0].imageUrl = 'https://www.image2url.com/r2/default/files/1786107541110-7147fb41-a0c9-418e-b1ce-8b35b8a7089a.png';
-            parsed.slides[0].audioUrl = 'https://www.image2url.com/r2/default/videos/1786109221182-a26d10ae-fed4-4489-a0f2-922bb88b1d09.mp4';
-          }
           parsed.slides = parsed.slides.map((slide: any, idx: number) => {
+            if (DEFAULT_AUDIO_URLS[idx]) {
+              slide.audioUrl = DEFAULT_AUDIO_URLS[idx];
+            }
             const titleLower = (slide.title || '').toLowerCase().trim();
             if (
               !slide.title ||
@@ -45,6 +52,12 @@ export default function App() {
         }
         if (parsed.instantProgressBarFill === undefined || (parsed.instantProgressBarFill === false && parsed.slides?.[0]?.id === 'slide-1')) {
           parsed.instantProgressBarFill = true;
+        }
+        if (parsed.advanceOnClickImage === undefined) {
+          parsed.advanceOnClickImage = false;
+        }
+        if (parsed.disableInitialDarkOverlay === undefined) {
+          parsed.disableInitialDarkOverlay = false;
         }
         if (
           parsed.title === 'Apresentação Interativa de Exemplo' ||

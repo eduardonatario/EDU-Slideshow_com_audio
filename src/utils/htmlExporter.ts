@@ -146,8 +146,7 @@ export function generateStandaloneHtml(config: SlideshowConfig): string {
     .play-overlay {
       position: absolute;
       inset: 0;
-      background: rgba(0, 0, 0, 0.4);
-      backdrop-filter: blur(2px);
+      ${config.disableInitialDarkOverlay ? 'background: transparent;' : 'background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(2px);'}
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -204,7 +203,7 @@ export function generateStandaloneHtml(config: SlideshowConfig): string {
 <body>
 
   <div class="slideshow-wrapper">
-    <div class="media-container">
+    <div class="media-container" id="media-container">
       <div id="flash-overlay" style="position: absolute; inset: 0; background-color: white; opacity: 0; pointer-events: none; z-index: 30;"></div>
       ${config.slides.map((slide, i) => `
         <img
@@ -398,17 +397,20 @@ export function generateStandaloneHtml(config: SlideshowConfig): string {
     function updateControlsUI(isUnlocked) {
       const isLastSlide = currentIndex === CONFIG.slides.length - 1;
       const isLastSlideCompleted = isLastSlide && completedSlides.has(CONFIG.slides[currentIndex].id);
+      const isAudioBypassed = Boolean(CONFIG.advanceOnClickImage) && audioStarted;
+      const canProceed = isUnlocked || isAudioBypassed;
+      const showReplay = isLastSlide && (completedSlides.has(CONFIG.slides[currentIndex].id) || isAudioBypassed);
 
-      if (!CONFIG.autoAdvance && isUnlocked && !isLastSlideCompleted) {
+      if (!CONFIG.autoAdvance && canProceed && !isLastSlideCompleted) {
         prevBtn.style.display = currentIndex > 0 ? 'flex' : 'none';
         nextBtn.style.display = !isLastSlide ? 'flex' : 'none';
       } else {
-        prevBtn.style.display = 'none';
+        prevBtn.style.display = (!CONFIG.autoAdvance && isAudioBypassed && currentIndex > 0 && !isLastSlideCompleted) ? 'flex' : 'none';
         nextBtn.style.display = 'none';
       }
 
       if (replayBtn) {
-        replayBtn.style.display = isLastSlideCompleted ? 'flex' : 'none';
+        replayBtn.style.display = showReplay ? 'flex' : 'none';
       }
     }
 
@@ -428,6 +430,7 @@ export function generateStandaloneHtml(config: SlideshowConfig): string {
       audio.play().then(() => {
         playOverlay.style.display = 'none';
         updateProgressBar();
+        updateControlsUI(false);
       }).catch((err) => {
         console.warn('Audio play error:', err);
       });
@@ -440,7 +443,9 @@ export function generateStandaloneHtml(config: SlideshowConfig): string {
     });
 
     nextBtn.addEventListener('click', () => {
-      if (completedSlides.has(CONFIG.slides[currentIndex].id) && currentIndex < CONFIG.slides.length - 1) {
+      const isAudioBypassed = Boolean(CONFIG.advanceOnClickImage) && audioStarted;
+      const canProceed = completedSlides.has(CONFIG.slides[currentIndex].id) || isAudioBypassed;
+      if (canProceed && currentIndex < CONFIG.slides.length - 1) {
         loadSlide(currentIndex + 1);
       }
     });

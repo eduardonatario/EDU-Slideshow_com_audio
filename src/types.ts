@@ -17,6 +17,8 @@ export interface SlideshowConfig {
   flashTransition?: boolean;
   showProgressBar?: boolean;
   instantProgressBarFill?: boolean;
+  advanceOnClickImage?: boolean;
+  disableInitialDarkOverlay?: boolean;
   theme: 'dark' | 'light';
 }
 
