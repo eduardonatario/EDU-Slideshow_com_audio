@@ -13,8 +13,13 @@ import {
   Sparkles,
   Layers,
   MoveHorizontal,
-  MoveVertical
+  MoveVertical,
+  Code2,
+  Check,
+  Copy,
+  ShieldCheck
 } from 'lucide-react';
+import { generateEmbedCode, generateStandaloneHtml } from '../utils/htmlExporter';
 
 interface ConfigPanelProps {
   config: SlideshowConfig;
@@ -41,6 +46,46 @@ const SAMPLE_AUDIOS = [
 
 export const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onChangeConfig, appUrl }) => {
   const [selectedSlideId, setSelectedSlideId] = useState<string>(config.slides[0]?.id || '');
+  const [copiedIframe, setCopiedIframe] = useState(false);
+  const [copiedHtmlCode, setCopiedHtmlCode] = useState(false);
+
+  const currentAppUrl = appUrl || (typeof window !== 'undefined' ? window.location.origin + window.location.pathname : '');
+  const embedIframeCode = generateEmbedCode(config, currentAppUrl);
+  const standaloneHtmlCode = generateStandaloneHtml(config);
+
+  const handleCopyIframe = async () => {
+    try {
+      await navigator.clipboard.writeText(embedIframeCode);
+      setCopiedIframe(true);
+      setTimeout(() => setCopiedIframe(false), 2000);
+    } catch {
+      const textarea = document.createElement('textarea');
+      textarea.value = embedIframeCode;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+      setCopiedIframe(true);
+      setTimeout(() => setCopiedIframe(false), 2000);
+    }
+  };
+
+  const handleCopyShadowHtml = async () => {
+    try {
+      await navigator.clipboard.writeText(standaloneHtmlCode);
+      setCopiedHtmlCode(true);
+      setTimeout(() => setCopiedHtmlCode(false), 2000);
+    } catch {
+      const textarea = document.createElement('textarea');
+      textarea.value = standaloneHtmlCode;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+      setCopiedHtmlCode(true);
+      setTimeout(() => setCopiedHtmlCode(false), 2000);
+    }
+  };
 
   const selectedSlide = config.slides.find((s) => s.id === selectedSlideId) || config.slides[0];
 
@@ -683,6 +728,80 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onChangeConfig
               Nenhum slide selecionado.
             </div>
           )}
+
+          {/* Card de Incorporação e Embed (Isolamento Total) */}
+          <div className="p-6 bg-white border border-slate-200 rounded-3xl shadow-xs space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+              <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                <Code2 className="w-4 h-4 text-blue-600" />
+                Incorporação e Embed (Isolamento Total)
+              </h3>
+              <div className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full text-[11px] font-semibold w-fit">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                Blindagem Bidirecional Ativa
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-500 leading-relaxed">
+              O código deste slideshow foi totalmente blindado para <strong>não interferir no CSS ou scripts do site hospedeiro</strong> e <strong>não ser afetado por estilos externos</strong> (usando <em>Shadow DOM Declarativo</em> e encapsulamento estrito).
+            </p>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+              {/* Opção 1: Iframe Embed */}
+              <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl flex flex-col justify-between gap-3">
+                <div>
+                  <div className="text-xs font-bold text-slate-800 mb-1">Opção 1: Código Iframe (Embed)</div>
+                  <div className="text-[11px] text-slate-500 leading-normal">
+                    Recomendado para CMS, Notion, WordPress ou páginas com regras estritas. Cria uma sandbox 100% isolada pelo navegador.
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleCopyIframe}
+                  className="w-full flex items-center justify-center gap-2 px-3.5 py-2 bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 rounded-xl text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
+                >
+                  {copiedIframe ? (
+                    <>
+                      <Check className="w-3.5 h-3.5 text-emerald-600" />
+                      <span className="text-emerald-700 font-bold">Iframe Copiado!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3.5 h-3.5 text-slate-600" />
+                      <span>Copiar Código Iframe</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {/* Opção 2: HTML com Shadow DOM */}
+              <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl flex flex-col justify-between gap-3">
+                <div>
+                  <div className="text-xs font-bold text-slate-800 mb-1">Opção 2: HTML com Shadow DOM</div>
+                  <div className="text-[11px] text-slate-500 leading-normal">
+                    Código HTML direto com Shadow DOM nativo. O CSS externo não penetra e os estilos do slideshow não vazam.
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleCopyShadowHtml}
+                  className="w-full flex items-center justify-center gap-2 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+                >
+                  {copiedHtmlCode ? (
+                    <>
+                      <Check className="w-3.5 h-3.5 text-white" />
+                      <span className="font-bold">HTML Copiado!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3.5 h-3.5 text-white" />
+                      <span>Copiar HTML (Shadow DOM)</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

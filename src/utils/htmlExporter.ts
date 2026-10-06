@@ -30,8 +30,8 @@ export function generateStandaloneHtml(config: SlideshowConfig): string {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${escapeHtml(config.title || 'Audio Slideshow')}</title>
   <style>
-    /* Standalone Page View Styling (Active ONLY if loaded as a standalone document, never affects parent page) */
-    html, body.as-standalone-body {
+    /* Standalone page styling: only active when file is opened directly as a document */
+    html, body.as-standalone-page {
       margin: 0;
       padding: 0;
       width: 100%;
@@ -43,322 +43,339 @@ export function generateStandaloneHtml(config: SlideshowConfig): string {
       justify-content: center;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
-
-    /* ==========================================================================
-       ISOLATED SLIDESHOW ROOT - Scope strictly to #${instanceId}
-       'all: initial' prevents any CSS from the host website from bleeding into the slideshow.
-       All rules are strictly scoped so no slideshow styles leak out to the host.
-       ========================================================================== */
+    /* Outer container style */
     #${instanceId} {
-      all: initial;
       display: block;
-      box-sizing: border-box;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      color: #1a1a1a;
       width: 100%;
       max-width: ${dims.maxWidth};
       margin: 16px auto;
-      position: relative;
-      text-align: left;
-      line-height: normal;
-      direction: ltr;
-      background: transparent;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-    }
-
-    /* Universal box-sizing & reset ONLY within this slideshow instance */
-    #${instanceId} *,
-    #${instanceId} *::before,
-    #${instanceId} *::after {
       box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: inherit;
-      line-height: inherit;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    #${instanceId} button {
-      cursor: pointer;
-      background: transparent;
-      border: none;
-      outline: none;
-      font: inherit;
-      color: inherit;
-      user-select: none;
-      -webkit-user-select: none;
-      touch-action: manipulation;
-    }
-
-    #${instanceId} img {
-      display: block;
-      max-width: none;
-      border: none;
-      outline: none;
-    }
-
-    /* Isolated Components */
-    #${instanceId} .as-wrapper {
-      width: 100%;
-      background: #ffffff;
-      color: #1a1a1a;
-      border: 1px solid #e2e8f0;
-      border-radius: 24px;
-      overflow: hidden;
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08);
-      padding: 16px;
-      position: relative;
-    }
-
-    #${instanceId} .as-media-container {
-      position: relative;
-      width: 100%;
-      aspect-ratio: ${dims.aspectRatio};
-      max-height: 85vh;
-      background-color: #f1f5f9;
-      border-radius: 16px;
-      overflow: hidden;
-      border: 1px solid #e2e8f0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: ${config.advanceOnClickImage ? 'pointer' : 'default'};
-    }
-
-    #${instanceId} .as-slide-img {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      transition: none;
-      pointer-events: none;
-    }
-
-    #${instanceId} .as-nav-btn {
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      z-index: 20;
-      width: 48px;
-      height: 48px;
-      border-radius: 9999px;
-      background: rgba(255, 255, 255, 0.9);
-      color: #0f172a;
-      border: 1px solid #e2e8f0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-      transition: all 0.2s ease;
-    }
-
-    #${instanceId} .as-nav-btn:hover:not(:disabled) {
-      background: #ffffff;
-      transform: translateY(-50%) scale(1.05);
-    }
-
-    #${instanceId} .as-nav-btn:disabled {
-      opacity: 0.3;
-      cursor: not-allowed;
-      background: rgba(255, 255, 255, 0.6);
-      border-color: #cbd5e1;
-    }
-
-    #${instanceId} .as-nav-btn-left {
-      left: 16px;
-    }
-
-    #${instanceId} .as-nav-btn-right {
-      right: 16px;
-    }
-
-    #${instanceId} .as-replay-btn {
-      position: absolute;
-      top: 16px;
-      right: 16px;
-      z-index: 30;
-      width: 40px;
-      height: 40px;
-      border-radius: 9999px;
-      background: rgba(255, 255, 255, 0.95);
-      color: #1e293b;
-      border: 1px solid #e2e8f0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-      transition: all 0.2s ease;
-    }
-
-    #${instanceId} .as-replay-btn:hover {
-      background: #ffffff;
-      transform: scale(1.1);
-    }
-
-    #${instanceId} .as-caption-overlay {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.3) 70%, transparent 100%);
-      padding: 16px 20px;
-      color: #ffffff;
-      pointer-events: none;
-      z-index: 10;
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-
-    #${instanceId} .as-caption-title {
-      font-size: 15px;
-      font-weight: 700;
-      color: #ffffff;
-      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-    }
-
-    #${instanceId} .as-caption-text {
-      font-size: 12px;
-      color: #e2e8f0;
-      line-height: 1.4;
-      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-    }
-
-    #${instanceId} .as-play-overlay {
-      position: absolute;
-      inset: 0;
-      ${config.disableInitialDarkOverlay ? 'background: transparent;' : 'background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(2px);'}
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      color: #ffffff;
-      z-index: 20;
-    }
-
-    #${instanceId} .as-play-trigger-btn {
-      width: 56px;
-      height: 56px;
-      border-radius: 9999px;
-      background: #ffffff;
-      color: #000000;
-      border: 1px solid #cbd5e1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
-      transition: transform 0.2s ease;
-      margin-top: 8px;
-      pointer-events: auto;
-    }
-
-    #${instanceId} .as-play-trigger-btn:hover {
-      transform: scale(1.1);
-    }
-
-    #${instanceId} .as-progress-bar-container {
-      margin-top: 16px;
-      padding: 0 4px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      width: 100%;
-    }
-
-    #${instanceId} .as-progress-segment {
-      flex: 1;
-      height: 8px;
-      background: #e2e8f0;
-      border: 1px solid #cbd5e1;
-      border-radius: 9999px;
-      overflow: hidden;
-      position: relative;
-      cursor: pointer;
-    }
-
-    #${instanceId} .as-progress-segment-fill {
-      height: 100%;
-      background: #2563eb;
-      width: 0%;
-      border-radius: 9999px;
-      ${config.instantProgressBarFill !== false ? 'transition: none;' : 'transition: width 0.15s ease-out;'}
-    }
-
-    #${instanceId} .as-flash-overlay {
-      position: absolute;
-      inset: 0;
-      background-color: white;
-      opacity: 0;
-      pointer-events: none;
-      z-index: 30;
     }
   </style>
 </head>
-<body class="as-standalone-body">
+<body class="as-standalone-page">
 
-  <!-- Isolated Root Container -->
-  <div id="${instanceId}" class="as-slideshow-root">
-    <div class="as-wrapper">
-      <div class="as-media-container">
-        <div class="as-flash-overlay"></div>
-        ${config.slides.map((slide, i) => `
-          <img
-            class="as-slide-img as-slide-img-${i}"
-            src="${slide.imageUrl || ''}"
-            alt="${escapeHtml(slide.title || 'Slide ' + (i + 1))}"
-            style="opacity: ${i === 0 ? '1' : '0'}; z-index: ${i === 0 ? '1' : '0'};"
-            loading="eager"
-          />
-        `).join('')}
+  <!-- =========================================================================
+       AUDIO SLIDESHOW EMBED (100% ISOLATED VIA SHADOW DOM & STRICT IIFE CLOSURE)
+       - O Shadow DOM bloqueia 100% dos estilos CSS do site pai para não interferir aqui
+       - Nenhum estilo deste slideshow vaza para o site pai
+       - O script opera exclusivamente no shadowRoot com zero variáveis globais
+       ========================================================================= -->
+  <div id="${instanceId}">
+    <template shadowrootmode="open">
+      <style>
+        :host {
+          all: initial;
+          display: block;
+          width: 100%;
+          max-width: ${dims.maxWidth};
+          margin: 0 auto;
+          position: relative;
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+          color: #1a1a1a;
+          line-height: normal;
+          text-align: left;
+          direction: ltr;
+          box-sizing: border-box;
+          -webkit-font-smoothing: antialiased;
+          -moz-osx-font-smoothing: grayscale;
+        }
 
-        <button class="as-nav-btn as-nav-btn-left as-btn-prev" title="Slide Anterior" style="display: none;">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-        </button>
+        *, *::before, *::after {
+          box-sizing: border-box;
+          margin: 0;
+          padding: 0;
+          font-family: inherit;
+          line-height: inherit;
+          -webkit-tap-highlight-color: transparent;
+        }
 
-        <button class="as-nav-btn as-nav-btn-right as-btn-next" title="Próximo Slide" style="display: none;">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
-        </button>
+        button {
+          cursor: pointer;
+          background: transparent;
+          border: none;
+          outline: none;
+          font: inherit;
+          color: inherit;
+          user-select: none;
+          -webkit-user-select: none;
+          touch-action: manipulation;
+        }
 
-        <button class="as-replay-btn as-btn-replay" title="Reiniciar Apresentação" style="display: none;">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
-            <path d="M3 3v5h5"/>
-          </svg>
-        </button>
+        img {
+          display: block;
+          max-width: none;
+          border: none;
+          outline: none;
+        }
 
-        <div class="as-caption-overlay as-caption-box" style="display: none;">
-          <div class="as-caption-title as-slide-title"></div>
-          <div class="as-caption-text as-slide-text"></div>
-        </div>
+        .as-wrapper {
+          width: 100%;
+          background: #ffffff;
+          color: #1a1a1a;
+          border: 1px solid #e2e8f0;
+          border-radius: 24px;
+          overflow: hidden;
+          box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08);
+          padding: 16px;
+          position: relative;
+        }
 
-        <div class="as-play-overlay" style="display: none;">
-          <button class="as-play-trigger-btn as-btn-start-audio" title="Iniciar">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+        .as-media-container {
+          position: relative;
+          width: 100%;
+          aspect-ratio: ${dims.aspectRatio};
+          max-height: 85vh;
+          background-color: #f1f5f9;
+          border-radius: 16px;
+          overflow: hidden;
+          border: 1px solid #e2e8f0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: ${config.advanceOnClickImage ? 'pointer' : 'default'};
+        }
+
+        .as-slide-img {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          transition: none;
+          pointer-events: none;
+        }
+
+        .as-nav-btn {
+          position: absolute;
+          top: 50%;
+          transform: translateY(-50%);
+          z-index: 20;
+          width: 48px;
+          height: 48px;
+          border-radius: 9999px;
+          background: rgba(255, 255, 255, 0.9);
+          color: #0f172a;
+          border: 1px solid #e2e8f0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+          transition: all 0.2s ease;
+        }
+
+        .as-nav-btn:hover:not(:disabled) {
+          background: #ffffff;
+          transform: translateY(-50%) scale(1.05);
+        }
+
+        .as-nav-btn-left {
+          left: 16px;
+        }
+
+        .as-nav-btn-right {
+          right: 16px;
+        }
+
+        .as-replay-btn {
+          position: absolute;
+          top: 16px;
+          right: 16px;
+          z-index: 30;
+          width: 40px;
+          height: 40px;
+          border-radius: 9999px;
+          background: rgba(255, 255, 255, 0.95);
+          color: #1e293b;
+          border: 1px solid #e2e8f0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+          transition: all 0.2s ease;
+        }
+
+        .as-replay-btn:hover {
+          background: #ffffff;
+          transform: scale(1.1);
+        }
+
+        .as-caption-overlay {
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.3) 70%, transparent 100%);
+          padding: 16px 20px;
+          color: #ffffff;
+          pointer-events: none;
+          z-index: 10;
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+        }
+
+        .as-caption-title {
+          font-size: 15px;
+          font-weight: 700;
+          color: #ffffff;
+          text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+        }
+
+        .as-caption-text {
+          font-size: 12px;
+          color: #e2e8f0;
+          line-height: 1.4;
+          text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+        }
+
+        .as-play-overlay {
+          position: absolute;
+          inset: 0;
+          ${config.disableInitialDarkOverlay ? 'background: transparent;' : 'background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(2px);'}
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          color: #ffffff;
+          z-index: 20;
+        }
+
+        .as-play-trigger-btn {
+          width: 56px;
+          height: 56px;
+          border-radius: 9999px;
+          background: #ffffff;
+          color: #000000;
+          border: 1px solid #cbd5e1;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+          transition: transform 0.2s ease;
+          margin-top: 8px;
+          pointer-events: auto;
+        }
+
+        .as-play-trigger-btn:hover {
+          transform: scale(1.1);
+        }
+
+        .as-progress-bar-container {
+          margin-top: 16px;
+          padding: 0 4px;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          width: 100%;
+        }
+
+        .as-progress-segment {
+          flex: 1;
+          height: 8px;
+          background: #e2e8f0;
+          border: 1px solid #cbd5e1;
+          border-radius: 9999px;
+          overflow: hidden;
+          position: relative;
+          cursor: pointer;
+        }
+
+        .as-progress-segment-fill {
+          height: 100%;
+          background: #2563eb;
+          width: 0%;
+          border-radius: 9999px;
+          ${config.instantProgressBarFill !== false ? 'transition: none;' : 'transition: width 0.15s ease-out;'}
+        }
+
+        .as-flash-overlay {
+          position: absolute;
+          inset: 0;
+          background-color: white;
+          opacity: 0;
+          pointer-events: none;
+          z-index: 30;
+        }
+      </style>
+
+      <div class="as-wrapper">
+        <div class="as-media-container">
+          <div class="as-flash-overlay"></div>
+          ${config.slides.map((slide, i) => `
+            <img
+              class="as-slide-img as-slide-img-${i}"
+              src="${slide.imageUrl || ''}"
+              alt="${escapeHtml(slide.title || 'Slide ' + (i + 1))}"
+              style="opacity: ${i === 0 ? '1' : '0'}; z-index: ${i === 0 ? '1' : '0'};"
+              loading="eager"
+            />
+          `).join('')}
+
+          <button class="as-nav-btn as-nav-btn-left as-btn-prev" title="Slide Anterior" style="display: none;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
           </button>
+
+          <button class="as-nav-btn as-nav-btn-right as-btn-next" title="Próximo Slide" style="display: none;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+
+          <button class="as-replay-btn as-btn-replay" title="Reiniciar Apresentação" style="display: none;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+              <path d="M3 3v5h5"/>
+            </svg>
+          </button>
+
+          <div class="as-caption-overlay as-caption-box" style="display: none;">
+            <div class="as-caption-title as-slide-title"></div>
+            <div class="as-caption-text as-slide-text"></div>
+          </div>
+
+          <div class="as-play-overlay" style="display: none;">
+            <button class="as-play-trigger-btn as-btn-start-audio" title="Iniciar">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+            </button>
+          </div>
         </div>
+
+        ${config.showProgressBar !== false ? `
+        <div class="as-progress-bar-container">
+          ${config.slides.map((_, i) => `
+            <div class="as-progress-segment as-progress-segment-${i}" data-index="${i}" title="Slide ${i + 1}">
+              <div class="as-progress-segment-fill as-progress-fill-${i}"></div>
+            </div>
+          `).join('')}
+        </div>` : ''}
       </div>
 
-      ${config.showProgressBar !== false ? `
-      <div class="as-progress-bar-container">
-        ${config.slides.map((_, i) => `
-          <div class="as-progress-segment as-progress-segment-${i}" data-index="${i}" title="Slide ${i + 1}">
-            <div class="as-progress-segment-fill as-progress-fill-${i}"></div>
-          </div>
-        `).join('')}
-      </div>` : ''}
-    </div>
-
-    <audio class="as-audio-player" preload="auto"></audio>
+      <audio class="as-audio-player" preload="auto"></audio>
+    </template>
   </div>
 
   <!-- Encapsulated Controller Script (Strict Closure / IIFE - Zero Global Pollution) -->
   <script>
     (function() {
       'use strict';
-      var root = document.getElementById(${JSON.stringify(instanceId)});
-      if (!root) return;
+      var host = document.getElementById(${JSON.stringify(instanceId)});
+      if (!host) return;
+
+      // Access Shadow Root (Declarative Shadow DOM) or attach programmatically with fallback
+      var root = host.shadowRoot;
+      if (!root && typeof host.attachShadow === 'function') {
+        try {
+          var tmpl = host.querySelector('template');
+          if (tmpl && tmpl.content) {
+            root = host.attachShadow({ mode: 'open' });
+            root.appendChild(tmpl.content.cloneNode(true));
+          }
+        } catch (e) {
+          root = host;
+        }
+      }
+      if (!root) {
+        root = host;
+      }
 
       var CONFIG = ${jsonConfig};
       var currentIndex = 0;
