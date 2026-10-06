@@ -363,8 +363,8 @@ export const SlideshowPlayer: React.FC<SlideshowPlayerProps> = ({
             );
           })}
 
-          {/* Left Arrow Button (Previous Slide) */}
-          {!config.autoAdvance && (canAdvance || Boolean(config.advanceOnClickImage) || isCurrentSlideCompleted) && currentIndex > 0 && !isLastSlideCompleted && (
+          {/* Left Arrow Button (Previous Slide - não exibe no último slide) */}
+          {!config.autoAdvance && (canAdvance || Boolean(config.advanceOnClickImage) || isCurrentSlideCompleted) && currentIndex > 0 && !isLastSlide && (
             <button
               onClick={handlePrevSlide}
               className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-white/90 hover:bg-white text-slate-900 shadow-xl border border-slate-200 flex items-center justify-center transition-all active:scale-95 hover:scale-105"

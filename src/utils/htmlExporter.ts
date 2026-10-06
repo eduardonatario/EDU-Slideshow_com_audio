@@ -532,10 +532,10 @@ export function generateStandaloneHtml(config: SlideshowConfig): string {
         var showReplay = isLastSlide && (completedSlides.has(CONFIG.slides[currentIndex].id) || isAudioBypassed);
 
         if (prevBtn) {
-          if (!CONFIG.autoAdvance && canProceed && !isLastSlideCompleted) {
-            prevBtn.style.display = currentIndex > 0 ? 'flex' : 'none';
+          if (!CONFIG.autoAdvance && canProceed && currentIndex > 0 && !isLastSlide) {
+            prevBtn.style.display = 'flex';
           } else {
-            prevBtn.style.display = (!CONFIG.autoAdvance && isAudioBypassed && currentIndex > 0 && !isLastSlideCompleted) ? 'flex' : 'none';
+            prevBtn.style.display = 'none';
           }
         }
 
