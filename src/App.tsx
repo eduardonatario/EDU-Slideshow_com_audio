@@ -133,7 +133,7 @@ export default function App() {
   // Standalone Embed view
   if (isEmbedMode) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-2">
+      <div className="w-full min-h-screen bg-transparent flex items-center justify-center p-0 sm:p-2">
         <SlideshowPlayer config={config} isEmbedView={true} />
       </div>
     );
