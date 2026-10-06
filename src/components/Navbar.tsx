@@ -77,7 +77,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Size Selector Group */}
           <div className="hidden lg:flex items-center bg-slate-100 border border-slate-200 rounded-full p-1 text-xs text-slate-500">
             <span className="px-2.5 text-[10px] uppercase font-bold text-slate-400 tracking-wider">Tamanho:</span>
-            {(['small', 'medium', 'large'] as SlideSize[]).map((s) => (
+            {(['small', 'medium', 'large', 'custom'] as SlideSize[]).map((s) => (
               <button
                 key={s}
                 onClick={() => setSize(s)}
@@ -87,7 +87,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     : 'hover:text-slate-900'
                 }`}
               >
-                {s === 'small' ? 'Pequeno' : s === 'medium' ? 'Médio' : 'Grande'}
+                {s === 'small' ? 'Pequeno' : s === 'medium' ? 'Médio' : s === 'large' ? 'Grande' : 'Personalizado'}
               </button>
             ))}
           </div>

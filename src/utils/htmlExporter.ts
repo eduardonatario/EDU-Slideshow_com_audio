@@ -3,13 +3,22 @@ import { SlideshowConfig } from '../types';
 export function generateStandaloneHtml(config: SlideshowConfig): string {
   const jsonConfig = JSON.stringify(config, null, 2);
 
-  const sizeCssMap = {
-    small: 'max-width: 520px;',
-    medium: 'max-width: 800px;',
-    large: 'max-width: 1100px;'
+  const getDims = () => {
+    if (config.size === 'small') {
+      return { maxWidth: '520px', aspectRatio: '520 / 293' };
+    }
+    if (config.size === 'large') {
+      return { maxWidth: '1100px', aspectRatio: '1100 / 619' };
+    }
+    if (config.size === 'custom') {
+      const w = Math.max(280, Number(config.customWidth) || 800);
+      const h = Math.max(180, Number(config.customHeight) || 450);
+      return { maxWidth: `${w}px`, aspectRatio: `${w} / ${h}` };
+    }
+    return { maxWidth: '800px', aspectRatio: '800 / 450' };
   };
 
-  const containerMaxWidth = sizeCssMap[config.size] || sizeCssMap.medium;
+  const dims = getDims();
 
   return `<!DOCTYPE html>
 <html lang="pt-BR">
@@ -32,7 +41,7 @@ export function generateStandaloneHtml(config: SlideshowConfig): string {
     }
     .slideshow-wrapper {
       width: 100%;
-      ${containerMaxWidth}
+      max-width: ${dims.maxWidth};
       background: #ffffff;
       color: #1a1a1a;
       border: 1px solid #e2e8f0;
@@ -44,7 +53,8 @@ export function generateStandaloneHtml(config: SlideshowConfig): string {
     .media-container {
       position: relative;
       width: 100%;
-      aspect-ratio: 16 / 9;
+      aspect-ratio: ${dims.aspectRatio};
+      max-height: 85vh;
       background-color: #f1f5f9;
       border-radius: 16px;
       overflow: hidden;
@@ -501,13 +511,19 @@ export function downloadHtmlFile(config: SlideshowConfig, filename = 'slideshow.
 }
 
 export function generateEmbedCode(config: SlideshowConfig, appUrl: string): string {
-  const sizeMap = {
-    small: { w: '520', h: '420' },
-    medium: { w: '800', h: '560' },
-    large: { w: '1100', h: '720' }
-  };
-  const dims = sizeMap[config.size] || sizeMap.medium;
+  let w = 800;
+  let h = 560;
+  if (config.size === 'small') {
+    w = 520;
+    h = 420;
+  } else if (config.size === 'large') {
+    w = 1100;
+    h = 720;
+  } else if (config.size === 'custom') {
+    w = Math.max(280, Number(config.customWidth) || 800);
+    h = (Number(config.customHeight) || 450) + 110;
+  }
   const embedUrl = `${appUrl.replace(/\/$/, '')}?embed=true`;
 
-  return `<iframe src="${embedUrl}" width="${dims.w}" height="${dims.h}" style="border: 0; border-radius: 12px; overflow: hidden;" allow="autoplay" title="${escapeHtml(config.title || 'Slideshow')}"></iframe>`;
+  return `<iframe src="${embedUrl}" width="${w}" height="${h}" style="border: 0; border-radius: 12px; overflow: hidden;" allow="autoplay" title="${escapeHtml(config.title || 'Slideshow')}"></iframe>`;
 }

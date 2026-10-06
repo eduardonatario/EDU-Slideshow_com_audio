@@ -11,7 +11,9 @@ import {
   Layout,
   Volume2,
   Sparkles,
-  Layers
+  Layers,
+  MoveHorizontal,
+  MoveVertical
 } from 'lucide-react';
 
 interface ConfigPanelProps {
@@ -46,8 +48,34 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onChangeConfig
     onChangeConfig({ ...config, title });
   };
 
+  const currentWidth = config.customWidth || (config.size === 'small' ? 520 : config.size === 'large' ? 1100 : 800);
+  const currentHeight = config.customHeight || (config.size === 'small' ? 293 : config.size === 'large' ? 619 : 450);
+
   const handleUpdateSize = (size: SlideSize) => {
-    onChangeConfig({ ...config, size });
+    let customWidth = config.customWidth || 800;
+    let customHeight = config.customHeight || 450;
+    if (size === 'small') {
+      customWidth = 520;
+      customHeight = 293;
+    } else if (size === 'medium') {
+      customWidth = 800;
+      customHeight = 450;
+    } else if (size === 'large') {
+      customWidth = 1100;
+      customHeight = 619;
+    }
+    onChangeConfig({ ...config, size, customWidth, customHeight });
+  };
+
+  const handleCustomDimensionChange = (width: number, height: number) => {
+    const validWidth = Math.min(1920, Math.max(280, Number(width) || 800));
+    const validHeight = Math.min(1600, Math.max(180, Number(height) || 450));
+    onChangeConfig({
+      ...config,
+      size: 'custom',
+      customWidth: validWidth,
+      customHeight: validHeight
+    });
   };
 
   const handleUpdateAutoAdvance = (autoAdvance: boolean) => {
@@ -135,10 +163,10 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onChangeConfig
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 text-slate-800">
-      {/* Main Grid Layout: General Settings + Slide Manager + Slide Detail */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Left Column (4 cols): General Settings + Slide List */}
-        <div className="lg:col-span-4 space-y-6">
+      {/* Main Grid Layout: General Settings + Slide Manager + Slide Detail (Coluna esquerda aumentada em 5%: de 33.3% para 38.3%) */}
+      <div className="grid grid-cols-1 lg:grid-cols-[38.3%_minmax(0,1fr)] gap-8 items-start">
+        {/* Left Column (aumentada em 5%): General Settings + Slide List */}
+        <div className="space-y-6">
           {/* General Settings Bento Card */}
           <div className="p-6 bg-white border border-slate-200 rounded-3xl shadow-xs space-y-5">
             <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2 border-b border-slate-100 pb-3">
@@ -158,32 +186,144 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onChangeConfig
               />
             </div>
 
-            {/* Slideshow Size Selection (3 Sizes) */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-2">
-                Tamanho da Apresentação (3 Opções)
-              </label>
-              <div className="grid grid-cols-3 gap-2">
+            {/* Slideshow Size Selection (Horizontal and Vertical Customization) */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <label className="block text-xs font-semibold text-slate-700">
+                  Tamanho do Slide (Horizontal & Vertical)
+                </label>
+                <span className="text-[11px] font-mono font-medium text-slate-600 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-lg">
+                  {currentWidth}px × {currentHeight}px
+                </span>
+              </div>
+
+              {/* 4 Size Preset Buttons */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 {[
-                  { id: 'small', label: 'Pequeno', desc: '520px' },
-                  { id: 'medium', label: 'Médio', desc: '800px' },
-                  { id: 'large', label: 'Grande', desc: '1100px' }
+                  { id: 'small', label: 'Pequeno', desc: '520 × 293 px' },
+                  { id: 'medium', label: 'Médio', desc: '800 × 450 px' },
+                  { id: 'large', label: 'Grande', desc: '1100 × 619 px' },
+                  { id: 'custom', label: 'Personalizado', desc: 'Livre (L × A)' }
                 ].map((s) => (
                   <button
                     key={s.id}
+                    type="button"
                     onClick={() => handleUpdateSize(s.id as SlideSize)}
-                    className={`p-2.5 rounded-2xl border text-center transition-all ${
+                    className={`p-2 rounded-xl border text-center transition-all ${
                       config.size === s.id
                         ? 'bg-blue-600 text-white border-blue-600 font-bold shadow-xs'
                         : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
                     }`}
                   >
-                    <div className="text-xs font-bold capitalize">{s.label}</div>
+                    <div className="text-xs font-bold">{s.label}</div>
                     <div className={`text-[10px] ${config.size === s.id ? 'text-blue-100' : 'text-slate-400'}`}>
                       {s.desc}
                     </div>
                   </button>
                 ))}
+              </div>
+
+              {/* Sliders and direct inputs for Horizontal (Width) and Vertical (Height) */}
+              <div className="p-3.5 bg-slate-50/90 border border-slate-200 rounded-2xl space-y-3">
+                {/* Horizontal (Largura) */}
+                <div>
+                  <div className="flex items-center justify-between text-xs mb-1.5">
+                    <span className="font-semibold text-slate-700 flex items-center gap-1.5">
+                      <MoveHorizontal className="w-3.5 h-3.5 text-blue-600" />
+                      Horizontal (Largura)
+                    </span>
+                    <div className="flex items-center gap-1">
+                      <input
+                        type="number"
+                        min="280"
+                        max="1920"
+                        step="10"
+                        value={currentWidth}
+                        onChange={(e) => handleCustomDimensionChange(Number(e.target.value), currentHeight)}
+                        className="w-16 px-1.5 py-0.5 text-right font-mono font-semibold text-xs bg-white border border-slate-300 rounded focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                      />
+                      <span className="text-[11px] text-slate-500 font-mono">px</span>
+                    </div>
+                  </div>
+                  <input
+                    type="range"
+                    min="320"
+                    max="1400"
+                    step="10"
+                    value={currentWidth}
+                    onChange={(e) => handleCustomDimensionChange(Number(e.target.value), currentHeight)}
+                    className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                  />
+                  <div className="flex justify-between text-[10px] text-slate-400 mt-0.5 font-mono">
+                    <span>320px</span>
+                    <span>800px</span>
+                    <span>1400px</span>
+                  </div>
+                </div>
+
+                {/* Vertical (Altura) */}
+                <div>
+                  <div className="flex items-center justify-between text-xs mb-1.5">
+                    <span className="font-semibold text-slate-700 flex items-center gap-1.5">
+                      <MoveVertical className="w-3.5 h-3.5 text-blue-600" />
+                      Vertical (Altura)
+                    </span>
+                    <div className="flex items-center gap-1">
+                      <input
+                        type="number"
+                        min="180"
+                        max="1600"
+                        step="10"
+                        value={currentHeight}
+                        onChange={(e) => handleCustomDimensionChange(currentWidth, Number(e.target.value))}
+                        className="w-16 px-1.5 py-0.5 text-right font-mono font-semibold text-xs bg-white border border-slate-300 rounded focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                      />
+                      <span className="text-[11px] text-slate-500 font-mono">px</span>
+                    </div>
+                  </div>
+                  <input
+                    type="range"
+                    min="200"
+                    max="1000"
+                    step="10"
+                    value={currentHeight}
+                    onChange={(e) => handleCustomDimensionChange(currentWidth, Number(e.target.value))}
+                    className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                  />
+                  <div className="flex justify-between text-[10px] text-slate-400 mt-0.5 font-mono">
+                    <span>200px</span>
+                    <span>450px</span>
+                    <span>1000px</span>
+                  </div>
+                </div>
+
+                {/* Proporções Rápidas (Atalhos) */}
+                <div className="pt-2 border-t border-slate-200/70">
+                  <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block mb-1.5">
+                    Proporções Rápidas:
+                  </span>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                    {[
+                      { label: '16:9 (Vídeo)', w: 800, h: 450 },
+                      { label: '4:3 (Padrão)', w: 800, h: 600 },
+                      { label: '1:1 (Quadrado)', w: 600, h: 600 },
+                      { label: '9:16 (Stories)', w: 450, h: 800 }
+                    ].map((preset) => (
+                      <button
+                        key={preset.label}
+                        type="button"
+                        onClick={() => handleCustomDimensionChange(preset.w, preset.h)}
+                        className={`px-2 py-1 text-[10px] font-semibold rounded-lg border transition-all text-center ${
+                          currentWidth === preset.w && currentHeight === preset.h
+                            ? 'bg-blue-100 text-blue-700 border-blue-300 font-bold'
+                            : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100'
+                        }`}
+                      >
+                        {preset.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -366,8 +506,8 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onChangeConfig
           </div>
         </div>
 
-        {/* Right Column (8 cols): Selected Slide Editor + Embed Code */}
-        <div className="lg:col-span-8 space-y-6">
+        {/* Right Column: Selected Slide Editor + Embed Code */}
+        <div className="space-y-6 min-w-0">
           {selectedSlide ? (
             <div className="p-8 bg-white border border-slate-200 rounded-3xl shadow-xs space-y-6">
               <div className="flex items-center justify-between border-b border-slate-100 pb-4">
@@ -501,12 +641,25 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onChangeConfig
                 </div>
               </div>
 
-              {/* Preview Box */}
+              {/* Preview Box with Configured Proportions */}
               <div className="pt-2">
-                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
-                  Pré-visualização do Slide
-                </label>
-                <div className="relative aspect-video rounded-2xl overflow-hidden bg-black border border-slate-200 max-w-md mx-auto shadow-md">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">
+                    Pré-visualização do Slide
+                  </label>
+                  <span className="text-[10px] font-mono text-slate-500 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-md font-semibold">
+                    {currentWidth} × {currentHeight} px
+                  </span>
+                </div>
+                <div
+                  className="relative rounded-2xl overflow-hidden bg-black border border-slate-200 max-w-md mx-auto shadow-md transition-all duration-300"
+                  style={{
+                    aspectRatio: `${currentWidth} / ${currentHeight}`,
+                    maxHeight: '380px',
+                    width: currentWidth >= currentHeight ? '100%' : 'auto',
+                    height: currentHeight > currentWidth ? '380px' : 'auto'
+                  }}
+                >
                   <img
                     src={selectedSlide.imageUrl}
                     alt=""
@@ -517,8 +670,10 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onChangeConfig
                     }}
                   />
                   <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black via-black/70 to-transparent p-4">
-                    <div className="text-xs font-bold text-white">{selectedSlide.title}</div>
-                    <div className="text-[11px] text-slate-300">{selectedSlide.caption}</div>
+                    <div className="text-xs font-bold text-white drop-shadow-xs">{selectedSlide.title}</div>
+                    {selectedSlide.caption && (
+                      <div className="text-[11px] text-slate-300 line-clamp-2 drop-shadow-xs">{selectedSlide.caption}</div>
+                    )}
                   </div>
                 </div>
               </div>

@@ -1,4 +1,4 @@
-export type SlideSize = 'small' | 'medium' | 'large';
+export type SlideSize = 'small' | 'medium' | 'large' | 'custom';
 
 export interface Slide {
   id: string;
@@ -12,6 +12,8 @@ export interface SlideshowConfig {
   title: string;
   slides: Slide[];
   size: SlideSize;
+  customWidth?: number;
+  customHeight?: number;
   autoAdvance: boolean;
   showCaptions: boolean;
   flashTransition?: boolean;

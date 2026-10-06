@@ -3,6 +3,8 @@ import { SlideshowConfig } from '../types';
 export const INITIAL_CONFIG: SlideshowConfig = {
   title: 'Audio Slideshow',
   size: 'medium',
+  customWidth: 800,
+  customHeight: 450,
   autoAdvance: false,
   showCaptions: false,
   flashTransition: false,

@@ -44,11 +44,22 @@ export const SlideshowPlayer: React.FC<SlideshowPlayerProps> = ({
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const currentSlide = config.slides[currentIndex] || config.slides[0];
 
-  const sizeClasses: Record<SlideSize, string> = {
-    small: 'max-w-lg',
-    medium: 'max-w-3xl',
-    large: 'max-w-6xl'
+  const getDimensions = () => {
+    if (config.size === 'small') {
+      return { width: 520, height: 293, maxWidth: '520px', aspectRatio: '520 / 293' };
+    }
+    if (config.size === 'large') {
+      return { width: 1100, height: 619, maxWidth: '1100px', aspectRatio: '1100 / 619' };
+    }
+    if (config.size === 'custom') {
+      const w = Math.max(280, Number(config.customWidth) || 800);
+      const h = Math.max(180, Number(config.customHeight) || 450);
+      return { width: w, height: h, maxWidth: `${w}px`, aspectRatio: `${w} / ${h}` };
+    }
+    return { width: 800, height: 450, maxWidth: '800px', aspectRatio: '800 / 450' };
   };
+
+  const dims = getDimensions();
 
   const isCurrentSlideCompleted = currentSlide ? completedSlideIds.has(currentSlide.id) : false;
   const isAudioBypassed = Boolean(config.advanceOnClickImage) && hasUserStarted;
@@ -297,7 +308,10 @@ export const SlideshowPlayer: React.FC<SlideshowPlayerProps> = ({
   const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
 
   return (
-    <div className={`w-full mx-auto ${sizeClasses[config.size]} transition-all duration-300 py-4`}>
+    <div
+      className="w-full mx-auto transition-all duration-300 py-4"
+      style={{ maxWidth: dims.maxWidth }}
+    >
       <audio
         ref={audioRef}
         onPlay={() => setIsPlaying(true)}
@@ -313,7 +327,8 @@ export const SlideshowPlayer: React.FC<SlideshowPlayerProps> = ({
         {/* Media Container Viewport */}
         <div
           onClick={handleMediaContainerClick}
-          className="relative w-full aspect-video bg-slate-100 rounded-2xl overflow-hidden flex items-center justify-center border border-slate-200/80 shadow-inner group"
+          className="relative w-full bg-slate-100 rounded-2xl overflow-hidden flex items-center justify-center border border-slate-200/80 shadow-inner group"
+          style={{ aspectRatio: dims.aspectRatio, maxHeight: '82vh' }}
         >
           {Boolean(config.flashTransition) && (
             <motion.div

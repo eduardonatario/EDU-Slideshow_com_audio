@@ -59,6 +59,12 @@ export default function App() {
         if (parsed.disableInitialDarkOverlay === undefined) {
           parsed.disableInitialDarkOverlay = false;
         }
+        if (parsed.customWidth === undefined) {
+          parsed.customWidth = parsed.size === 'small' ? 520 : parsed.size === 'large' ? 1100 : 800;
+        }
+        if (parsed.customHeight === undefined) {
+          parsed.customHeight = parsed.size === 'small' ? 293 : parsed.size === 'large' ? 619 : 450;
+        }
         if (
           parsed.title === 'Apresentação Interativa de Exemplo' ||
           parsed.title === 'AudioSlide Pro' ||
@@ -87,7 +93,21 @@ export default function App() {
   }, [config]);
 
   const handleUpdateSize = (size: SlideSize) => {
-    setConfig((prev) => ({ ...prev, size }));
+    setConfig((prev) => {
+      let customWidth = prev.customWidth || 800;
+      let customHeight = prev.customHeight || 450;
+      if (size === 'small') {
+        customWidth = 520;
+        customHeight = 293;
+      } else if (size === 'medium') {
+        customWidth = 800;
+        customHeight = 450;
+      } else if (size === 'large') {
+        customWidth = 1100;
+        customHeight = 619;
+      }
+      return { ...prev, size, customWidth, customHeight };
+    });
   };
 
   const handleDownloadHtml = () => {
